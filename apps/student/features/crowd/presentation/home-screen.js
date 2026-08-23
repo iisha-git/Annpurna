@@ -12,7 +12,7 @@ import { AppText } from '@/shared/ui';
 import { colors, radii, spacing } from '@/shared/theme/tokens';
 import { SHOW_SIMULATION_TOOLS } from '@/shared/lib/config';
 
-const MASCOT = require('@/assets/images/MASKOT.png');
+const MASCOT = require('@/assets/images/moscot.png');
 
 function greetingFor(hour) {
   if (hour < 12) return 'Good morning';
