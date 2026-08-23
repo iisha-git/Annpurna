@@ -22,9 +22,12 @@ const TAB_ICON = {
  *           mid-rise and settles — classic squash-and-stretch.
  * Unfocused: sinks back into the dock.
  */
-function AnimatedTabIcon({ focused, name, color, size = 24 }) {
+function AnimatedTabIcon({ focused, name, size = 24 }) {
   const lift = useRef(new Animated.Value(focused ? -16 : 0)).current;
   const squash = useRef(new Animated.Value(1)).current;
+
+  // Icon ink flips to dark while riding the cream droplet
+  const iconColor = focused ? '#17141A' : 'rgba(251,247,242,0.55)';
 
   useEffect(() => {
     if (focused) {
@@ -57,7 +60,7 @@ function AnimatedTabIcon({ focused, name, color, size = 24 }) {
           },
         ]}
       />
-      <MaterialCommunityIcons name={name} size={size} color={color} />
+      <MaterialCommunityIcons name={name} size={size} color={iconColor} />
     </Animated.View>
   );
 }
@@ -101,11 +104,10 @@ export default function TabLayout() {
           name={name}
           options={{
             title,
-            tabBarIcon: ({ color, focused }) => (
+            tabBarIcon: ({ focused }) => (
               <AnimatedTabIcon
                 focused={focused}
                 name={focused ? TAB_ICON[name][1] : TAB_ICON[name][0]}
-                color={color}
               />
             ),
           }}
@@ -131,6 +133,6 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(255,157,0,0.26)',
+    backgroundColor: colors.background, // exact page "light skin" — reads as a hole in the dock
   },
 });
