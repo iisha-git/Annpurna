@@ -31,6 +31,7 @@ export default function MenuScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }} // without this the scroller claims spare vertical space and shoves the cards down
         contentContainerStyle={styles.chipRow}>
         {WEEKDAYS.map((day) => {
           const selected = day === selectedDay;
@@ -55,7 +56,7 @@ export default function MenuScreen() {
           <AppText>Couldn't load the menu. Pull to retry later.</AppText>
         </Card>
       ) : (
-        <View style={{ marginTop: spacing.sm, gap: spacing.sm }}>
+        <View style={{ marginTop: spacing.xs, gap: spacing.sm }}>
           {dayMenu.meals.map((meal) => (
             <Card key={meal.slot} style={styles.mealCard}>
               <View style={styles.mealHeader}>
@@ -84,8 +85,9 @@ const styles = StyleSheet.create({
   },
   chipRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   chip: {
     width: 44, // perfect circles, not pills — day initials only
