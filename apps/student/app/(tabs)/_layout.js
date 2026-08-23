@@ -5,6 +5,23 @@ import { useEffect, useRef } from 'react';
 
 import { colors, fonts } from '@/shared/theme/tokens';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DROPLET GEOMETRY — owner-approved proportions. Every size derives from
+// CIRCLE, so scaling the whole composition later = change ONE number.
+//
+//   bubble        = CIRCLE            (38)
+//   dropWrap      = CIRCLE × 1.74 wide, CIRCLE × 1.05 tall   (66 × 40)
+//   fillet        = CIRCLE × 0.37     (14)  — concave wings at top:17.5,
+//                                           inset 2px from bubble's sides
+//   lift          = CIRCLE × 0.42     (16)
+//   dock height stays independent (62).
+// ─────────────────────────────────────────────────────────────────────────────
+const CIRCLE = 38;
+const DROP_W = Math.round(CIRCLE * 1.74); // 66
+const DROP_H = Math.round(CIRCLE * 1.05); // 40
+const FILLET = Math.round(CIRCLE * 0.37); // 14
+const LIFT = -Math.round(CIRCLE * 0.42); // -16
+
 // Rounded, food-friendly glyphs — inactive vs active pairs chosen so
 // the swap is OBVIOUS, not a subtle fill change
 const TAB_ICON = {
@@ -23,7 +40,7 @@ const TAB_ICON = {
  * Unfocused: sinks back into the dock.
  */
 function AnimatedTabIcon({ focused, name, size = 24 }) {
-  const lift = useRef(new Animated.Value(focused ? -16 : 0)).current;
+  const lift = useRef(new Animated.Value(focused ? LIFT : 0)).current;
   const squash = useRef(new Animated.Value(1)).current;
   const bubbleIn = useRef(new Animated.Value(focused ? 1 : 0)).current;
 
@@ -33,7 +50,7 @@ function AnimatedTabIcon({ focused, name, size = 24 }) {
   useEffect(() => {
     if (focused) {
       Animated.parallel([
-        Animated.spring(lift, { toValue: -16, friction: 4.5, tension: 170, useNativeDriver: true }),
+        Animated.spring(lift, { toValue: LIFT, friction: 4.5, tension: 170, useNativeDriver: true }),
         Animated.sequence([
           Animated.timing(squash, { toValue: 1.18, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
           Animated.spring(squash, { toValue: 1, friction: 3.5, tension: 200, useNativeDriver: true }),
@@ -139,26 +156,26 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '50%',
     top: '50%',
-    width: 66,
-    height: 40,
-    marginLeft: -33,
-    marginTop: -20,
+    width: DROP_W,
+    height: DROP_H,
+    marginLeft: -DROP_W / 2,
+    marginTop: -DROP_H / 2,
   },
   bubble: {
     position: 'absolute',
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    top: 1,
-    left: 14,
+    width: CIRCLE,
+    height: CIRCLE,
+    borderRadius: CIRCLE / 2,
+    top: (DROP_H - CIRCLE) / 2 - 1,
+    left: (DROP_W - CIRCLE) / 2,
     backgroundColor: colors.background, // exact page "light skin" — reads as a hole in the dock
   },
   filletL: {
     position: 'absolute',
-    left: 2, // just a hair from the bubble's edge
-    top: 17.5,
-    width: 14,
-    height: 14,
+    left: (DROP_W - CIRCLE) / 2 - FILLET + 2, // just a hair from the bubble's edge
+    top: DROP_H / 2 - 2.5,
+    width: FILLET,
+    height: FILLET,
     backgroundColor: colors.background,
     overflow: 'hidden',
   },
@@ -175,10 +192,10 @@ const styles = StyleSheet.create({
   },
   filletR: {
     position: 'absolute',
-    right: 2,
-    top: 17.5,
-    width: 14,
-    height: 14,
+    right: (DROP_W - CIRCLE) / 2 - FILLET + 2,
+    top: DROP_H / 2 - 2.5,
+    width: FILLET,
+    height: FILLET,
     backgroundColor: colors.background,
     overflow: 'hidden',
   },
