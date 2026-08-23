@@ -9,6 +9,7 @@ import { useCrowdStatus } from './use-crowd-status';
 import * as crowdRepository from '../data/mock-crowd-repository';
 import { useProfile } from '../../profile/presentation/use-profile';
 import { AppText } from '@/shared/ui';
+import { DoodleBowl } from '@/shared/ui/doodles/Doodles';
 import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 import { SHOW_SIMULATION_TOOLS } from '@/shared/lib/config';
 
@@ -56,9 +57,12 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: spacing.xl, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}>
-        <AppText variant="caption" style={{ marginTop: spacing.lg }}>
-          Here's how the mess looks right now
-        </AppText>
+        <View style={styles.sectionCaption}>
+          <DoodleBowl size={22} color={colors.accent} />
+          <AppText variant="caption" style={{ flex: 1 }}>
+            Here's how the mess looks right now
+          </AppText>
+        </View>
 
         <CrowdCard status={snap.status} />
 
@@ -171,6 +175,12 @@ const styles = StyleSheet.create({
   mascot: {
     width: 132,
     height: 132,
+  },
+  sectionCaption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xl,
   },
   reopenChip: {
     alignSelf: 'flex-start',

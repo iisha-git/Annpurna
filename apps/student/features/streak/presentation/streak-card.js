@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 
 import { useStreak } from './use-streak';
+import { DoodleFlame } from '@/shared/ui/doodles/Doodles';
 import { AppText, Card } from '@/shared/ui';
 import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 
@@ -26,7 +26,7 @@ export default function StreakCard() {
   return (
     <Card style={styles.card}>
       <View style={styles.flameWrap}>
-        <Ionicons name="flame" size={34} color={flameColor} />
+        <DoodleFlame size={32} color={flameColor} />
       </View>
       <View style={{ flex: 1 }}>
         <AppText variant="h1" style={styles.count}>

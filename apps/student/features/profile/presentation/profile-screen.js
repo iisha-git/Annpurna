@@ -5,6 +5,7 @@ import { initialsFor } from '../domain/profile-model';
 import { useProfile } from './use-profile';
 import StreakCard from '../../streak/presentation/streak-card';
 import { AppText, Card, Screen } from '@/shared/ui';
+import { DoodleSparkles } from '@/shared/ui/doodles/Doodles';
 import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 
 export default function ProfileScreen() {
@@ -45,9 +46,10 @@ export default function ProfileScreen() {
 
       {/* Good to know — scannable tiles instead of a wall of text */}
       <View style={styles.knowWrap}>
-        <AppText variant="title" style={{ marginBottom: spacing.md }}>
-          Good to know
-        </AppText>
+        <View style={styles.knowTitle}>
+          <DoodleSparkles size={20} color={colors.accent} />
+          <AppText variant="title">Good to know</AppText>
+        </View>
         <KnowTile icon="food-croissant" tint={colors.accent} soft={colors.accentSoft}>
           Meals & menu are curated by your mess owner
         </KnowTile>
@@ -123,6 +125,12 @@ const styles = StyleSheet.create({
   },
   knowWrap: {
     marginTop: spacing.md,
+  },
+  knowTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   tile: {
     flexDirection: 'row',
