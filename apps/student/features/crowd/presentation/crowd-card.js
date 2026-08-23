@@ -2,9 +2,8 @@ import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { RECOMMENDATIONS, WAIT_ESTIMATES } from '../domain/crowd-rules';
 import { AppText, Card } from '@/shared/ui';
-import { colors } from '@/shared/theme/tokens';
+import { colors, spacing } from '@/shared/theme/tokens';
 
 const TOTAL_PEOPLE = 10;
 
@@ -15,10 +14,18 @@ const LEVELS = {
   NONE: { label: 'Not enough feedback yet', color: colors.textMuted, soft: '#F3EEE7', people: 0 },
 };
 
+/** Ultra-short verdict — the pill & people meter do the explaining. */
+const SHORT_TAKE = {
+  LOW: 'Perfect time to go',
+  MODERATE: 'A little busy — your call',
+  HIGH: 'Packed right now',
+  NONE: 'Waiting for first responses…',
+};
+
 function timeAgo(date) {
   if (!date) return '';
   const mins = Math.floor((Date.now() - new Date(date).getTime()) / 60000);
-  return mins < 1 ? 'updated just now' : `updated ${mins} min ago`;
+  return mins < 1 ? 'just now' : `${mins} min ago`;
 }
 
 /**
@@ -27,21 +34,15 @@ function timeAgo(date) {
  */
 export default function CrowdCard({ status }) {
   const meta = status?.level ? LEVELS[status.level] : LEVELS.NONE;
+  const level = status?.level;
 
   return (
-    <Card style={{ marginTop: 16 }}>
+    <Card style={{ marginTop: spacing.md }}>
       <View style={styles.headerRow}>
         <AppText variant="title">Mess crowd</AppText>
-        <View style={{ alignItems: 'flex-end' }}>
-          {status?.origin === 'OWNER_OVERRIDE' && (
-            <AppText variant="caption" color={colors.accent}>
-              set by mess manager
-            </AppText>
-          )}
-          <AppText variant="caption" style={{ fontSize: 11 }}>
-            {timeAgo(status?.updatedAt)}
-          </AppText>
-        </View>
+        <AppText variant="caption" style={{ fontSize: 11 }}>
+          {timeAgo(status?.updatedAt)} · {status?.responseCount ?? 0} responses
+        </AppText>
       </View>
 
       {/* Level pill */}
@@ -50,9 +51,14 @@ export default function CrowdCard({ status }) {
         <AppText style={{ color: meta.color, fontWeight: '800', fontSize: 19 }}>
           {meta.label}
         </AppText>
+        {status?.origin === 'OWNER_OVERRIDE' && (
+          <AppText variant="caption" style={{ marginLeft: 6 }} color={colors.accentPressed}>
+            · set by manager
+          </AppText>
+        )}
       </View>
 
-      {/* People meter — "how full does the mess feel?" */}
+      {/* People meter — the visual IS the data */}
       <View style={styles.peopleRow}>
         {Array.from({ length: TOTAL_PEOPLE }, (_, i) => (
           <MaterialCommunityIcons
@@ -63,24 +69,10 @@ export default function CrowdCard({ status }) {
           />
         ))}
       </View>
-      {status?.level && (
-        <AppText variant="caption" style={{ marginTop: 6 }}>
-          Feels like {meta.people} of {TOTAL_PEOPLE} seats are taken
-        </AppText>
-      )}
 
-      <AppText style={{ marginTop: 14 }}>
-        {RECOMMENDATIONS[status?.level] ?? 'Check back in a few minutes'}
-      </AppText>
-
-      {WAIT_ESTIMATES[status?.level] && (
-        <AppText variant="caption" style={{ marginTop: 4 }}>
-          Estimated wait: {WAIT_ESTIMATES[status.level]}
-        </AppText>
-      )}
-
-      <AppText variant="caption" style={{ marginTop: 10 }}>
-        Based on {status?.responseCount ?? 0} anonymous responses from students at the mess
+      {/* The ONLY sentence we allow ourselves */}
+      <AppText variant="title" style={{ marginTop: spacing.md, fontSize: 15 }}>
+        {SHORT_TAKE[level] ?? SHORT_TAKE.NONE}
       </AppText>
     </Card>
   );
