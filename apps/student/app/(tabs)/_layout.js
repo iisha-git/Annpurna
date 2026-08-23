@@ -25,9 +25,10 @@ const TAB_ICON = {
 function AnimatedTabIcon({ focused, name, size = 24 }) {
   const lift = useRef(new Animated.Value(focused ? -16 : 0)).current;
   const squash = useRef(new Animated.Value(1)).current;
+  const bubbleIn = useRef(new Animated.Value(focused ? 1 : 0)).current;
 
   // Icon ink flips to dark while riding the cream droplet
-  const iconColor = focused ? '#17141A' : 'rgba(251,247,242,0.55)';
+  const iconColor = focused ? '#17141A' : 'rgba(251,247,242,0.62)';
 
   useEffect(() => {
     if (focused) {
@@ -37,22 +38,25 @@ function AnimatedTabIcon({ focused, name, size = 24 }) {
           Animated.timing(squash, { toValue: 1.18, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
           Animated.spring(squash, { toValue: 1, friction: 3.5, tension: 200, useNativeDriver: true }),
         ]),
+        Animated.timing(bubbleIn, { toValue: 1, duration: 150, useNativeDriver: true }),
       ]).start();
     } else {
       Animated.parallel([
         Animated.spring(lift, { toValue: 0, friction: 5, tension: 170, useNativeDriver: true }),
         Animated.timing(squash, { toValue: 1, duration: 160, useNativeDriver: true }),
+        Animated.timing(bubbleIn, { toValue: 0, duration: 140, useNativeDriver: true }),
       ]).start();
     }
-  }, [focused, lift, squash]);
+  }, [focused, lift, squash, bubbleIn]);
 
   return (
     <Animated.View style={[styles.iconWrap, { transform: [{ translateY: lift }] }]}>
-      {/* droplet behind the icon — stretches vertically while rising */}
+      {/* droplet behind the icon — fades in with focus, stretches while rising */}
       <Animated.View
         style={[
           styles.bubble,
           {
+            opacity: bubbleIn,
             transform: [
               { scaleY: squash },
               { scaleX: squash.interpolate({ inputRange: [1, 1.18], outputRange: [1, 0.94] }) },
