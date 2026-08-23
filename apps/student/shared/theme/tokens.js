@@ -10,6 +10,11 @@ export const colors = {
   surface: '#FFFFFF',
   border: '#EFE3D7',
 
+  // Dark theme surfaces (headers, floating navbar)
+  dark: '#2B2118', // deep espresso
+  onDarkMuted: '#C9B6A4', // secondary text on dark
+  accentOnDark: '#FF8A50', // brighter accent for dark backgrounds
+
   // Text
   text: '#2B2118', // espresso
   textMuted: '#8A7A6D',

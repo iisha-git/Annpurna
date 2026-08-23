@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Platform, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 
 import { colors } from '@/shared/theme/tokens';
@@ -15,13 +16,29 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: colors.accentOnDark,
+        tabBarInactiveTintColor: 'rgba(251,247,242,0.55)',
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
+          // Floating dark dock — detached from screen edges
+          position: 'absolute',
+          bottom: 18,
+          left: 18,
+          right: 18,
+          height: 62,
+          borderRadius: 20,
+          backgroundColor: colors.dark,
+          borderTopWidth: 0,
+          ...Platform.select({
+            ios: {
+              shadowColor: '#2B2118',
+              shadowOpacity: 0.3,
+              shadowRadius: 16,
+              shadowOffset: { width: 0, height: 8 },
+            },
+            android: { elevation: 10 },
+          }),
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelStyle: styles.label,
       }}>
       {[
         ['index', 'Home'],
@@ -43,3 +60,10 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  label: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+});
