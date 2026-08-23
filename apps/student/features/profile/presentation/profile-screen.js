@@ -121,16 +121,18 @@ export default function ProfileScreen() {
     </Screen>
   );
 }
-
-function StatTile({ icon, tint, soft, label, children }) {  return (
+function StatTile({ icon, tint, soft, label, children }) {
+  return (
     <View style={styles.statTile}>
       <View style={[styles.statIcon, { backgroundColor: soft }]}>
-        <MaterialCommunityIcons name={icon} size={22} color={tint} />
+        <MaterialCommunityIcons name={icon} size={18} color={tint} />
       </View>
-      <AppText variant="caption">{label}</AppText>
-      <AppText numberOfLines={1} style={styles.statValue}>
-        {children}
-      </AppText>
+      <View style={{ flex: 1 }}>
+        <AppText variant="caption">{label}</AppText>
+        <AppText numberOfLines={1} style={styles.statValue}>
+          {children}
+        </AppText>
+      </View>
     </View>
   );
 }
@@ -237,27 +239,28 @@ const styles = StyleSheet.create({
   },
   statTile: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     backgroundColor: colors.surface,
     borderRadius: radii.md,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm, // thin — icon and text share one line
     paddingHorizontal: spacing.md,
-    alignItems: 'flex-start',
   },
   statIcon: {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
     borderRadius: radii.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.sm,
   },
   statValue: {
     fontFamily: fonts.bodyBold,
-    fontSize: 15,
+    fontSize: 13.5,
     color: colors.text,
-    marginTop: 1,
+    marginTop: 0,
   },
   knowWrap: {
     marginTop: spacing.lg,
