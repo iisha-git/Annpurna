@@ -17,10 +17,13 @@ const OPTIONS = [
   { level: CROWD_LEVELS.HIGH, emoji: '🔴', label: 'Very crowded', bg: colors.dangerSoft, fg: colors.danger },
 ];
 
-export default function CrowdFeedbackPrompt({ onSubmit }) {
+export default function CrowdFeedbackPrompt({ onSubmit, onDismiss }) {
   return (
     <Modal transparent animationType="fade" statusBarTranslucent>
       <View style={styles.backdrop}>
+        <Pressable onPress={onDismiss} hitSlop={10} style={styles.close}>
+          <Text style={styles.closeText}>✕</Text>
+        </Pressable>
         <View style={styles.card}>
           <View style={styles.pushHeader}>
             <View style={styles.appDot} />
@@ -60,8 +63,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(43,33,24,0.45)',
     alignItems: 'center',
+    paddingTop: 90, // drops in from the top — like a notification arriving
+  },
+  close: {
+    alignSelf: 'flex-end',
+    marginRight: 4,
+    marginBottom: 6,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
+  },
+  closeText: {
+    fontSize: 15,
+    color: colors.textMuted,
   },
   card: {
     width: '100%',
