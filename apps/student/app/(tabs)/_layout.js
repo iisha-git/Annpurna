@@ -1,16 +1,41 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Platform, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
+import { Animated, Easing } from 'react-native';
+import { useEffect, useRef } from 'react';
 
 import { colors, fonts } from '@/shared/theme/tokens';
 
-// Rounded, food-friendly glyphs (MaterialCommunityIcons) for the cute vibe
+// Rounded, food-friendly glyphs (MaterialCommunityIcons) — inactive vs
+// active pairs chosen so the swap is OBVIOUS, not a subtle fill change
 const TAB_ICON = {
   index: ['home-variant-outline', 'home-variant'],
   menu: ['food-outline', 'noodles'],
-  status: ['calendar-month-outline', 'calendar-month'],
+  status: ['calendar-month-outline', 'calendar-check'],
   profile: ['account-circle-outline', 'account-circle'],
 };
+
+/**
+ * Bounces (scale up → settle) whenever this tab becomes focused.
+ * One component instance per tab, so hooks here are safe.
+ */
+function AnimatedTabIcon({ focused, name, color, size = 24 }) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!focused) return;
+    Animated.sequence([
+      Animated.timing(scale, { toValue: 1.35, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }),
+    ]).start();
+  }, [focused, scale]);
+
+  return (
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <MaterialCommunityIcons name={name} size={size} color={color} />
+    </Animated.View>
+  );
+}
 
 export default function TabLayout() {
   return (
@@ -53,9 +78,9 @@ export default function TabLayout() {
           options={{
             title,
             tabBarIcon: ({ color, focused }) => (
-              <MaterialCommunityIcons
+              <AnimatedTabIcon
+                focused={focused}
                 name={focused ? TAB_ICON[name][1] : TAB_ICON[name][0]}
-                size={24}
                 color={color}
               />
             ),
