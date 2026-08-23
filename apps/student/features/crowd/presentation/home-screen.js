@@ -44,31 +44,29 @@ export default function HomeScreen() {
       {/* ── Dark header: greeting + identity + mascot ── */}
       <SafeAreaView edges={['top']} style={styles.headerWrap}>
         <HeaderDoodles />
+
+        {/* Streak lives in the corner — flame up top, day count under it */}
+        <View style={styles.streakCorner} pointerEvents="none">
+          <DoodleFlame
+            size={34}
+            color={streak > 0 ? '#FFB13D' : 'rgba(255,246,232,0.30)'}
+            strokeWidth={3}
+          />
+          <AppText style={[styles.streakCount, streak === 0 && styles.streakCountEmpty]}>
+            {streak}
+          </AppText>
+        </View>
+
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <AppText style={styles.greeting}>{greetingFor(new Date().getHours())}</AppText>
             <AppText style={styles.userName} numberOfLines={1}>
               {student?.name ?? '…'}
             </AppText>
-            <View style={styles.badgeRow}>
-              <View style={styles.messChip}>
-                <AppText style={styles.messChipText}>Mess No. {student?.messNumber ?? '—'}</AppText>
-              </View>
-              <View
-                style={[
-                  styles.streakChip,
-                  streak === 0 && styles.streakChipEmpty,
-                ]}>
-                <DoodleFlame
-                  size={15}
-                  color={streak > 0 ? '#FFC96B' : 'rgba(255,246,232,0.35)'}
-                  strokeWidth={3}
-                />
-                <AppText style={[styles.streakChipText, streak === 0 && styles.streakChipTextEmpty]}>
-                  {streak}
-                </AppText>
-              </View>
+            <View style={styles.messChip}>
+              <AppText style={styles.messChipText}>Mess No. {student?.messNumber ?? '—'}</AppText>
             </View>
+          </View>
           </View>
           <Image source={MASCOT} style={styles.mascot} resizeMode="contain" />
         </View>
@@ -183,10 +181,20 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
     marginTop: 4,
   },
-  badgeRow: {
-    flexDirection: 'row',
+  streakCorner: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.xl,
     alignItems: 'center',
-    gap: spacing.sm,
+  },
+  streakCount: {
+    fontFamily: fonts.display,
+    fontSize: 18,
+    color: '#FFF6E8',
+    marginTop: 2,
+  },
+  streakCountEmpty: {
+    color: 'rgba(255,246,232,0.4)',
   },
   messChip: {
     alignSelf: 'flex-start',
@@ -200,26 +208,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts.bold,
     color: '#17141A', // dark ink on amber for max contrast
-  },
-  streakChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(255,157,0,0.18)',
-    borderRadius: radii.pill,
-    paddingVertical: 7,
-    paddingHorizontal: spacing.md,
-  },
-  streakChipEmpty: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
-  },
-  streakChipText: {
-    fontSize: 13,
-    fontFamily: fonts.bold,
-    color: '#FFC96B',
-  },
-  streakChipTextEmpty: {
-    color: 'rgba(255,246,232,0.4)',
   },
   mascot: {
     width: 152,
