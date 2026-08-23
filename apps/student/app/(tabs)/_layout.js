@@ -51,10 +51,13 @@ function AnimatedTabIcon({ focused, name, size = 24 }) {
 
   return (
     <Animated.View style={[styles.iconWrap, { transform: [{ translateY: lift }] }]}>
-      {/* droplet behind the icon — fades in with focus, stretches while rising */}
+      {/* Droplet assembly: cream circle + INVERTED fillets on both sides.
+          Each fillet is a cream square with a dock-colored disc punched
+          into its outer-top corner → the leftover sliver is a concave
+          curve flowing from the circle's side down to the dock surface. */}
       <Animated.View
         style={[
-          styles.bubble,
+          styles.dropWrap,
           {
             opacity: bubbleIn,
             transform: [
@@ -62,8 +65,15 @@ function AnimatedTabIcon({ focused, name, size = 24 }) {
               { scaleX: squash.interpolate({ inputRange: [1, 1.18], outputRange: [1, 0.94] }) },
             ],
           },
-        ]}
-      />
+        ]}>
+        <View style={styles.bubble} />
+        <View style={styles.filletL}>
+          <View style={styles.filletCutL} />
+        </View>
+        <View style={styles.filletR}>
+          <View style={styles.filletCutR} />
+        </View>
+      </Animated.View>
       <MaterialCommunityIcons name={name} size={size} color={iconColor} />
     </Animated.View>
   );
@@ -132,11 +142,59 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  dropWrap: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    width: 66,
+    height: 40,
+    marginLeft: -33,
+    marginTop: -20,
+  },
   bubble: {
     position: 'absolute',
     width: 38,
     height: 38,
     borderRadius: 19,
+    top: 1,
+    left: 14,
     backgroundColor: colors.background, // exact page "light skin" — reads as a hole in the dock
+  },
+  filletL: {
+    position: 'absolute',
+    left: 1,
+    bottom: 0,
+    width: 14,
+    height: 14,
+    backgroundColor: colors.background,
+    overflow: 'hidden',
+  },
+  // disc punched into the outer-top corner leaves a concave sliver
+  filletCutL: {
+    position: 'absolute',
+    left: -14,
+    top: -14,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.dark,
+  },
+  filletR: {
+    position: 'absolute',
+    right: 1,
+    bottom: 0,
+    width: 14,
+    height: 14,
+    backgroundColor: colors.background,
+    overflow: 'hidden',
+  },
+  filletCutR: {
+    position: 'absolute',
+    right: -14,
+    top: -14,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.dark,
   },
 });
