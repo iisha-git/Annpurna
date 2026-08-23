@@ -9,18 +9,18 @@ import { colors, fonts } from '@/shared/theme/tokens';
 // DROPLET GEOMETRY — owner-approved proportions. Every size derives from
 // CIRCLE, so scaling the whole composition later = change ONE number.
 //
-//   bubble        = CIRCLE            (38)
-//   dropWrap      = CIRCLE × 1.74 wide, CIRCLE × 1.05 tall   (66 × 40)
-//   fillet        = CIRCLE × 0.37     (14)  — concave wings at top:17.5,
-//                                           inset 2px from bubble's sides
-//   lift          = CIRCLE × 0.42     (16)
+//   bubble        = CIRCLE            (54 now)
+//   dropWrap      = CIRCLE × 1.74 wide, CIRCLE × 1.05 tall
+//   fillet        = FROZEN at 17 — owner wants curves unchanged while
+//                   the circle alone grows
+//   lift          = CIRCLE × 0.42
 //   dock height stays independent (62).
 // ─────────────────────────────────────────────────────────────────────────────
-const CIRCLE = 46;
-const DROP_W = Math.round(CIRCLE * 1.74); // 66
-const DROP_H = Math.round(CIRCLE * 1.05); // 40
-const FILLET = Math.round(CIRCLE * 0.37); // 14
-const LIFT = -Math.round(CIRCLE * 0.42); // -16
+const CIRCLE = 54;
+const DROP_W = Math.round(CIRCLE * 1.74);
+const DROP_H = Math.round(CIRCLE * 1.05);
+const FILLET = 17; // frozen — do NOT derive from CIRCLE anymore
+const LIFT = -Math.round(CIRCLE * 0.42);
 
 // Rounded, food-friendly glyphs — inactive vs active pairs chosen so
 // the swap is OBVIOUS, not a subtle fill change
