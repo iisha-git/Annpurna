@@ -8,6 +8,7 @@ import * as crowdRepository from '../data/mock-crowd-repository';
 import { useProfile } from '../../profile/presentation/use-profile';
 import { AppText, Screen } from '@/shared/ui';
 import { colors, spacing } from '@/shared/theme/tokens';
+import { SHOW_SIMULATION_TOOLS } from '@/shared/lib/config';
 
 function greetingFor(hour) {
   if (hour < 12) return 'Good morning';
@@ -44,8 +45,10 @@ export default function HomeScreen() {
         </Pressable>
       )}
 
-      {/* ── Dev-only simulation. Stripped automatically from release builds. ── */}
-      {__DEV__ && (
+      {/* ── Simulation controls. Kept for demos until real GPS lands —
+           flip SHOW_SIMULATION_TOOLS to false in shared/lib/config.js
+           before the final release build. ── */}
+      {SHOW_SIMULATION_TOOLS && (
         <View style={styles.devArea}>
           <Pressable onPress={() => setDevOpen((v) => !v)} hitSlop={8}>
             <Text style={styles.devToggle}>{devOpen ? '▾' : '▸'} DEV SIMULATION (not part of the app)</Text>
