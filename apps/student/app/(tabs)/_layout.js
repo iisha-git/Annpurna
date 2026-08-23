@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Animated, Easing } from 'react-native';
 import { useEffect, useRef } from 'react';
@@ -16,24 +16,47 @@ const TAB_ICON = {
 };
 
 /**
- * Bounces (scale up → settle) whenever this tab becomes focused.
+ * The Figma-style active bubble: a soft amber pill that POPS UP from
+ * beneath the icon whenever its tab becomes focused, and sinks away
+ * when focus leaves. The icon itself bounce-springs on top of it.
  * One component instance per tab, so hooks here are safe.
  */
 function AnimatedTabIcon({ focused, name, color, size = 24 }) {
   const scale = useRef(new Animated.Value(1)).current;
+  const bubble = useRef(new Animated.Value(focused ? 1 : 0)).current;
 
   useEffect(() => {
-    if (!focused) return;
-    Animated.sequence([
-      Animated.timing(scale, { toValue: 1.35, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }),
-    ]).start();
-  }, [focused, scale]);
+    if (focused) {
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(scale, { toValue: 1.35, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.spring(scale, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }),
+        ]),
+        Animated.spring(bubble, { toValue: 1, friction: 5, tension: 220, useNativeDriver: true }),
+      ]).start();
+    } else {
+      Animated.timing(bubble, { toValue: 0, duration: 160, useNativeDriver: true }).start();
+    }
+  }, [focused, scale, bubble]);
 
   return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <MaterialCommunityIcons name={name} size={size} color={color} />
-    </Animated.View>
+    <View style={styles.iconWrap}>
+      {/* the bubble — rises from below, spring overshoot = "pop" */}
+      <Animated.View
+        style={[
+          styles.bubble,
+          {
+            opacity: bubble,
+            transform: [{
+              translateY: bubble.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }),
+            }],
+          },
+        ]}
+      />
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <MaterialCommunityIcons name={name} size={size} color={color} />
+      </Animated.View>
+    </View>
   );
 }
 
@@ -95,5 +118,19 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontFamily: fonts.bold,
+  },
+  iconWrap: {
+    width: 48,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bubble: {
+    position: 'absolute',
+    width: 44,
+    height: 30,
+    borderRadius: 15,
+    bottom: -3,
+    backgroundColor: 'rgba(255,157,0,0.22)',
   },
 });
