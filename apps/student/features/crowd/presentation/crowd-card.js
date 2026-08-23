@@ -1,15 +1,18 @@
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { useEffect, useRef } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 
 import { RECOMMENDATIONS, WAIT_ESTIMATES } from '../domain/crowd-rules';
 import { AppText, Card } from '@/shared/ui';
 import { colors } from '@/shared/theme/tokens';
 
+const TOTAL_PEOPLE = 10;
+
 const LEVELS = {
-  LOW: { label: 'Low', color: colors.crowdLow, soft: colors.successSoft, segments: 1 },
-  MODERATE: { label: 'Moderate', color: colors.crowdModerate, soft: '#FDF1DC', segments: 2 },
-  HIGH: { label: 'High', color: colors.crowdHigh, soft: colors.dangerSoft, segments: 3 },
-  NONE: { label: 'Not enough feedback yet', color: colors.textMuted, soft: '#F3EEE7', segments: 0 },
+  LOW: { label: 'Low', color: colors.crowdLow, soft: colors.successSoft, people: 4 },
+  MODERATE: { label: 'Moderate', color: colors.crowdModerate, soft: '#FDF1DC', people: 6 },
+  HIGH: { label: 'High', color: colors.crowdHigh, soft: colors.dangerSoft, people: 9 },
+  NONE: { label: 'Not enough feedback yet', color: colors.textMuted, soft: '#F3EEE7', people: 0 },
 };
 
 function timeAgo(date) {
@@ -49,15 +52,22 @@ export default function CrowdCard({ status }) {
         </AppText>
       </View>
 
-      {/* 3-segment meter */}
-      <View style={styles.meter}>
-        {[1, 2, 3].map((seg) => (
-          <View
-            key={seg}
-            style={[styles.segment, seg <= meta.segments && { backgroundColor: meta.color }]}
+      {/* People meter — "how full does the mess feel?" */}
+      <View style={styles.peopleRow}>
+        {Array.from({ length: TOTAL_PEOPLE }, (_, i) => (
+          <Ionicons
+            key={i}
+            name="person"
+            size={22}
+            color={i < meta.people ? meta.color : 'rgba(43,33,24,0.16)'}
           />
         ))}
       </View>
+      {status?.level && (
+        <AppText variant="caption" style={{ marginTop: 6 }}>
+          Feels like {meta.people} of {TOTAL_PEOPLE} seats are taken
+        </AppText>
+      )}
 
       <AppText style={{ marginTop: 14 }}>
         {RECOMMENDATIONS[status?.level] ?? 'Check back in a few minutes'}
@@ -126,15 +136,9 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
   },
-  meter: {
+  peopleRow: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 2,
     marginTop: 12,
-  },
-  segment: {
-    flex: 1,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.border,
   },
 });
