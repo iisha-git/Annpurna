@@ -20,7 +20,8 @@ export default function Button({ label, onPress, variant = 'primary', disabled =
         pressed && !disabled && styles.pressed,
         style,
       ]}>
-      <Text style={[styles.label, isPrimary ? { color: '#FFFFFF' } : { color: colors.accent }]}>
+      {/* Amber background needs dark ink for readable contrast */}
+      <Text style={[styles.label, isPrimary ? { color: colors.text } : { color: colors.accentPressed }]}>
         {label}
       </Text>
     </Pressable>

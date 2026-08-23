@@ -5,25 +5,24 @@
  */
 
 export const colors = {
-  // Surfaces
-  background: '#FBF7F2', // warm paper
+  // ── Core palette (owner-approved) ──
+  backgroundDark: '#0E0B13', // near-black w/ violet undertone — headers, navbar
   surface: '#FFFFFF',
+  primary: '#FF9D00', // vivid amber — brand actions
+  primaryLight: '#FFF0D6', // pale amber — soft fills
+  textDark: '#17141A',
+  textLight: '#FFFFFF',
+  muted: '#8B8380',
+
+  // Aliases used across the app (keep code readable, single source above)
+  background: '#FBF7F2', // warm paper page background
   border: '#EFE3D7',
-
-  // Dark theme surfaces (headers, floating navbar)
-  // Modern charcoal-navy — sits between black and dark navy
-  dark: '#1D2430',
-  onDarkMuted: '#A7B0C0', // secondary text on dark
-  accentOnDark: '#FF8A50', // brighter accent for dark backgrounds
-
-  // Text
-  text: '#2B2118', // espresso
-  textMuted: '#8A7A6D',
-
-  // Brand
-  accent: '#E8632B', // terracotta
-  accentPressed: '#C95422',
-  accentSoft: '#FDEADD',
+  dark: '#0E0B13',
+  onDarkMuted: '#ABA3A8', // secondary text on dark surfaces
+  accent: '#FF9D00',
+  accentOnDark: '#FFB13D', // slightly lifted amber for dark backgrounds
+  accentPressed: '#E68900',
+  accentSoft: '#FFF0D6',
 
   // Semantic
   success: '#3E9C55',
