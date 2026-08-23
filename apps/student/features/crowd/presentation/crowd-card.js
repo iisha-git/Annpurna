@@ -83,8 +83,8 @@ function PulsingDot({ color }) {
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(value, { toValue: 1.6, duration: 1000, easing: Easing.out(Easing.quad) }),
-        Animated.timing(value, { toValue: 1, duration: 1000, easing: Easing.in(Easing.quad) }),
+        Animated.timing(value, { toValue: 1.6, duration: 1000, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(value, { toValue: 1, duration: 1000, easing: Easing.in(Easing.quad), useNativeDriver: true }),
       ])
     );
     loop.start();
