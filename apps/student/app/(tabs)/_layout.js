@@ -43,11 +43,19 @@ function AnimatedTabIcon({ focused, name, size = 28 }) {
   const lift = useRef(new Animated.Value(focused ? LIFT : 0)).current;
   const squash = useRef(new Animated.Value(1)).current;
   const bubbleIn = useRef(new Animated.Value(focused ? 1 : 0)).current;
+  // Skip the choreography on mount — animated values start AT their resting
+  // pose above, so a fresh render (reload) sits still instead of jiggling.
+  // The dance should only play when focus genuinely changes.
+  const mounted = useRef(false);
 
   // Icon ink flips to dark while riding the cream droplet
   const iconColor = focused ? '#17141A' : 'rgba(251,247,242,0.62)';
 
   useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
     if (focused) {
       // POUR IN — tiny beat lets the old droplet start melting first,
       // so focus reads as one continuous liquid transfer, not a swap
