@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end', // mascot plants itself on the header's bottom edge
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl + 8,
+    paddingTop: spacing.xxl + 24,
   },
   headerLeft: {
     flex: 1,
@@ -151,32 +151,35 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg, // text floats; only the mascot touches the floor
   },
   greeting: {
-    fontSize: 14,
-    color: colors.onDarkMuted,
+    fontSize: 15,
+    color: '#FFC96B', // soft amber — echoes the doodles & brand
     fontFamily: fonts.bodySemi,
+    letterSpacing: 0.3,
   },
   userName: {
-    fontSize: 28,
-    color: '#FFFFFF',
+    fontSize: 32,
+    color: '#FFF6E8', // warm cream instead of clinical pure white
     fontFamily: fonts.display,
     marginTop: 4,
   },
   messChip: {
     alignSelf: 'flex-start',
-    marginTop: spacing.sm,
-    backgroundColor: 'rgba(251,247,242,0.12)',
+    marginTop: spacing.md,
+    backgroundColor: 'rgba(255,157,0,0.16)', // amber-tinted pill
     borderRadius: radii.pill,
-    paddingVertical: 5,
-    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(255,157,0,0.35)',
   },
   messChipText: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.bodySemi,
-    color: '#F1E4D6',
+    color: '#FFC96B',
   },
   mascot: {
-    width: 132,
-    height: 132,
+    width: 152,
+    height: 152,
   },
   sectionCaption: {
     flexDirection: 'row',
