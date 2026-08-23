@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import CrowdCard from './crowd-card';
 import CrowdFeedbackPrompt from './crowd-feedback-prompt';
+import HeaderDoodles from './header-doodles';
 import { useCrowdStatus } from './use-crowd-status';
 import * as crowdRepository from '../data/mock-crowd-repository';
 import { useProfile } from '../../profile/presentation/use-profile';
@@ -39,6 +40,7 @@ export default function HomeScreen() {
 
       {/* ── Dark header: greeting + identity + mascot ── */}
       <SafeAreaView edges={['top']} style={styles.headerWrap}>
+        <HeaderDoodles />
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <AppText style={styles.greeting}>{greetingFor(new Date().getHours())}</AppText>

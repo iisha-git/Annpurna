@@ -67,3 +67,76 @@ export function DoodleSparkles({ size = 24, color = colors.accent, strokeWidth =
     </Svg>
   );
 }
+
+export function DoodleCarrot({ size = 24, color = '#FF9D00', strokeWidth = 2.4 }) {
+  const s = strokeProps(color, strokeWidth);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 48 48">
+      {/* tapered root */}
+      <Path d="M27 15c6 2 10 8 8 13L15 39c-4-4-2-13 4-19 2.4-2.4 5-5.4 8-5z" {...s} />
+      {/* ridges */}
+      <Path d="M21.5 26.5l5.5 2.2" {...s} />
+      <Path d="M17.5 31.5l5.5 2.2" {...s} />
+      {/* greens */}
+      <Path d="M30 13c1-4 4-6 8-6-1 4-4 6-8 6z" {...s} />
+      <Path d="M33 15c3-2 6-2 9 0-3 2.5-6.5 2.5-9 0z" {...s} />
+    </Svg>
+  );
+}
+
+export function DoodleApple({ size = 24, color = '#E8837A', strokeWidth = 2.4 }) {
+  const s = strokeProps(color, strokeWidth);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 48 48">
+      {/* body */}
+      <Path d="M24 16c-4.5-4-12-2-13.5 4.5C9 27 13.5 37 20 39c2.6.8 5.4.8 8 0 6.5-2 11-12 9.5-18.5C36 14 28.5 12 24 16z" {...s} />
+      {/* stem */}
+      <Path d="M24 15c-.5-3 .5-5 2.5-7" {...s} />
+      {/* leaf */}
+      <Path d="M26.5 8.5c3-1.5 6-1 8 1.5-2.8 1.8-5.8 1.8-8-1.5z" {...s} />
+    </Svg>
+  );
+}
+
+export function DoodleLeaf({ size = 24, color = '#9BC98F', strokeWidth = 2.4 }) {
+  const s = strokeProps(color, strokeWidth);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 48 48">
+      {/* blade */}
+      <Path d="M10 38C8 24 18 10 38 9c1.5 20-11 30.5-25.5 29.5z" {...s} />
+      {/* vein */}
+      <Path d="M12.5 35.5C20 27 28 20 35 13" {...s} />
+    </Svg>
+  );
+}
+
+export function DoodleBroccoli({ size = 24, color = '#9BC98F', strokeWidth = 2.4 }) {
+  const s = strokeProps(color, strokeWidth);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 48 48">
+      {/* fluffy crown */}
+      <Path d="M14 22a5.5 5.5 0 0 1 3-9 6 6 0 0 1 11-2.5A5.5 5.5 0 0 1 34 21" {...s} />
+      <Path d="M13 22.5h22" {...s} />
+      {/* stem */}
+      <Path d="M20 22.5V29c0 2 1.5 3.5 4 3.5s4-1.5 4-3.5v-6.5" {...s} />
+      {/* floret dots */}
+      <Path d="M19 15.5h.01" {...s} />
+      <Path d="M25 12.5h.01" {...s} />
+      <Path d="M30 15.5h.01" {...s} />
+    </Svg>
+  );
+}
+
+export function DoodleCherries({ size = 24, color = '#F2A09B', strokeWidth = 2.4 }) {
+  const s = strokeProps(color, strokeWidth);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 48 48">
+      {/* stems meeting at top */}
+      <Path d="M17 27C16 20 19 13 26 9c1 6-1 12-6 18" {...s} />
+      <Path d="M33 28c2-7 0-13-7-19" {...s} />
+      {/* fruit */}
+      <Path d="M17 30a6 6 0 1 1-8 6 6.2 6.2 0 0 1 8-6z" {...s} />
+      <Path d="M35 31a6 6 0 1 1-8 6 6.2 6.2 0 0 1 8-6z" {...s} />
+    </Svg>
+  );
+}
