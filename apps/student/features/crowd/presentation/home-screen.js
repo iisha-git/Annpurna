@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
     fontSize: 18,
     color: '#FFF6E8',
-    marginTop: 2,
+    marginTop: -4,
   },
   streakCountEmpty: {
     color: 'rgba(255,246,232,0.4)',
