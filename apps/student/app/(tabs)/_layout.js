@@ -49,19 +49,33 @@ function AnimatedTabIcon({ focused, name, size = 24 }) {
 
   useEffect(() => {
     if (focused) {
+      // POUR IN — tiny beat lets the old droplet start melting first,
+      // so focus reads as one continuous liquid transfer, not a swap
       Animated.parallel([
-        Animated.spring(lift, { toValue: LIFT, friction: 4.5, tension: 170, useNativeDriver: true }),
         Animated.sequence([
+          Animated.delay(50),
+          Animated.spring(lift, { toValue: LIFT, friction: 4.5, tension: 170, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.delay(50),
           Animated.timing(squash, { toValue: 1.18, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
           Animated.spring(squash, { toValue: 1, friction: 3.5, tension: 200, useNativeDriver: true }),
         ]),
-        Animated.timing(bubbleIn, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.sequence([
+          Animated.delay(30),
+          Animated.timing(bubbleIn, { toValue: 1, duration: 180, useNativeDriver: true }),
+        ]),
       ]).start();
     } else {
+      // MELT DOWN — droplet flattens like water leaving while it sinks,
+      // then recovers its resting shape for the next time it's chosen
       Animated.parallel([
         Animated.spring(lift, { toValue: 0, friction: 5, tension: 170, useNativeDriver: true }),
-        Animated.timing(squash, { toValue: 1, duration: 160, useNativeDriver: true }),
-        Animated.timing(bubbleIn, { toValue: 0, duration: 140, useNativeDriver: true }),
+        Animated.sequence([
+          Animated.timing(squash, { toValue: 0.7, duration: 110, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          Animated.spring(squash, { toValue: 1, friction: 4, tension: 180, useNativeDriver: true }),
+        ]),
+        Animated.timing(bubbleIn, { toValue: 0, duration: 230, useNativeDriver: true }),
       ]).start();
     }
   }, [focused, lift, squash, bubbleIn]);
