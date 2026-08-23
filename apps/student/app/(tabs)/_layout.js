@@ -91,7 +91,7 @@ export default function TabLayout() {
           bottom: 18,
           left: 18,
           right: 18,
-          height: 87, // was 62 — +0.4x for a roomier dock
+          height: 62,
           borderRadius: 20,
           backgroundColor: colors.dark,
           borderTopWidth: 0,
