@@ -1,5 +1,6 @@
 import { CROWD_LEVELS } from '../domain/crowd-model';
 import { REPORT_VALIDITY_MS, aggregateReports, resolveCrowdStatus } from '../domain/crowd-rules';
+import { toDateKey } from '@/shared/lib/date';
 
 /**
  * MOCK CROWD ENGINE — stands in for the whole real-world pipeline:
@@ -33,6 +34,14 @@ let promptTimer = null;
 
 /** @type {Array<import('../domain/crowd-model').CrowdReport>} */
 let reports = [];
+
+/**
+ * Calendar days on which I answered a crowd prompt (drives the streak).
+ * Unlike crowd reports these never expire — a check-in day is forever.
+ * NOTE: in-memory for now; the real backend will persist this.
+ * @type {Set<string>}
+ */
+const myCheckInDays = new Set();
 
 /** @type {?{level:string}} */
 let ownerOverride = null;
@@ -109,6 +118,7 @@ export function submitFeedback(level) {
   clearTimeout(promptTimer);
   myVisit.reportSubmitted = true;
   feedbackPending = false;
+  myCheckInDays.add(toDateKey(new Date())); // streak record
   reports.push({
     id: `me-${Date.now()}`,
     studentId: CURRENT_STUDENT_ID,
@@ -149,6 +159,7 @@ export function getSnapshot() {
     hasActiveVisit: Boolean(myVisit),
     canSubmitFeedback: Boolean(myVisit && !myVisit.reportSubmitted),
     feedbackPending,
+    checkInDates: [...myCheckInDays],
   };
 }
 

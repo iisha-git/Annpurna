@@ -2,6 +2,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { initialsFor } from '../domain/profile-model';
 import { useProfile } from './use-profile';
+import StreakCard from '../../streak/presentation/streak-card';
 import { AppText, Card, Screen } from '@/shared/ui';
 import { colors, radii, spacing } from '@/shared/theme/tokens';
 
@@ -37,6 +38,9 @@ export default function ProfileScreen() {
         <DetailRow label="Course" value={student.course} />
         <DetailRow label="Room" value={student.room} last />
       </Card>
+
+      {/* Crowd check-in streak */}
+      <StreakCard />
 
       <Card style={{ marginTop: spacing.md }}>
         <AppText variant="caption">
