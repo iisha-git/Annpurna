@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   filletL: {
     position: 'absolute',
     left: 1,
-    top: 13, // vertically centered on the 38px bubble
+    top: 18, // a touch below the bubble's equator
     width: 14,
     height: 14,
     backgroundColor: colors.background,
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   filletR: {
     position: 'absolute',
     right: 1,
-    top: 13,
+    top: 18,
     width: 14,
     height: 14,
     backgroundColor: colors.background,
