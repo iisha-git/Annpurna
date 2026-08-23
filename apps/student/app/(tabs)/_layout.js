@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Animated, Easing, Platform, StyleSheet } from 'react-native';
+import { Animated, Easing, Platform, StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
