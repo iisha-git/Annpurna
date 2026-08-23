@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   filletL: {
     position: 'absolute',
     left: 2, // just a hair from the bubble's edge
-    top: 17,
+    top: 17.5,
     width: 14,
     height: 14,
     backgroundColor: colors.background,
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   filletR: {
     position: 'absolute',
     right: 2,
-    top: 17,
+    top: 17.5,
     width: 14,
     height: 14,
     backgroundColor: colors.background,
