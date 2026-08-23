@@ -163,17 +163,18 @@ const styles = StyleSheet.create({
   filletL: {
     position: 'absolute',
     left: 1,
-    bottom: 0,
+    top: 13, // vertically centered on the 38px bubble
     width: 14,
     height: 14,
     backgroundColor: colors.background,
     overflow: 'hidden',
   },
-  // disc punched into the outer-top corner leaves a concave sliver
+  // vertically-flipped punch: concave sliver now hugs the TOP edge,
+  // curving down-and-outward from the bubble's equator
   filletCutL: {
     position: 'absolute',
     left: -14,
-    top: -14,
+    bottom: -14,
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
   filletR: {
     position: 'absolute',
     right: 1,
-    bottom: 0,
+    top: 13,
     width: 14,
     height: 14,
     backgroundColor: colors.background,
@@ -191,7 +192,7 @@ const styles = StyleSheet.create({
   filletCutR: {
     position: 'absolute',
     right: -14,
-    top: -14,
+    bottom: -14,
     width: 28,
     height: 28,
     borderRadius: 14,
