@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, radii, spacing } from '@/shared/theme/tokens';
+import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 
 /**
  * Primary action button.
@@ -51,6 +51,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: fonts.bold,
   },
 });

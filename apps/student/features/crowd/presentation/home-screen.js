@@ -9,7 +9,7 @@ import { useCrowdStatus } from './use-crowd-status';
 import * as crowdRepository from '../data/mock-crowd-repository';
 import { useProfile } from '../../profile/presentation/use-profile';
 import { AppText } from '@/shared/ui';
-import { colors, radii, spacing } from '@/shared/theme/tokens';
+import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 import { SHOW_SIMULATION_TOOLS } from '@/shared/lib/config';
 
 const MASCOT = require('@/assets/images/moscot.png');
@@ -135,24 +135,24 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end', // mascot plants itself on the header's bottom edge
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xxl + 8,
+    paddingTop: spacing.xxl + 8,
   },
   headerLeft: {
     flex: 1,
     marginRight: spacing.md,
+    paddingBottom: spacing.lg, // text floats; only the mascot touches the floor
   },
   greeting: {
     fontSize: 14,
     color: colors.onDarkMuted,
-    fontWeight: '500',
+    fontFamily: fonts.bodySemi,
   },
   userName: {
-    fontSize: 26,
-    fontWeight: '800',
+    fontSize: 28,
     color: '#FFFFFF',
+    fontFamily: fonts.display,
     marginTop: 4,
   },
   messChip: {
@@ -165,12 +165,12 @@ const styles = StyleSheet.create({
   },
   messChipText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: fonts.bodySemi,
     color: '#F1E4D6',
   },
   mascot: {
-    width: 124,
-    height: 124,
+    width: 132,
+    height: 132,
   },
   reopenChip: {
     alignSelf: 'flex-start',
@@ -181,8 +181,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
   },
   reopenChipText: {
-    color: colors.accent,
-    fontWeight: '600',
+    color: colors.accentPressed,
+    fontFamily: fonts.bold,
     fontSize: 14,
   },
   devArea: {

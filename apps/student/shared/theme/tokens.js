@@ -52,15 +52,22 @@ export const radii = {
   pill: 999,
 };
 
-// Typography scale — system font for now, swap later if needed
-const base = {
-  fontFamily: undefined, // system default (SF Pro / Roboto)
+// Font families — Fredoka (rounded, chubby) for headings, Nunito for body.
+// Loaded once in app/_layout.js via useFonts.
+export const fonts = {
+  display: 'Fredoka_600SemiBold',
+  displayRegular: 'Fredoka_400Regular',
+  body: 'Nunito_400Regular',
+  bodySemi: 'Nunito_600SemiBold',
+  bold: 'Nunito_700Bold',
+  extra: 'Nunito_800ExtraBold',
 };
 
+// Typography scale — families carry the weight, so no fontWeight needed
 export const typography = {
-  display: { ...base, fontSize: 30, fontWeight: '800' },
-  h1: { ...base, fontSize: 24, fontWeight: '700' },
-  title: { ...base, fontSize: 17, fontWeight: '600' },
-  body: { ...base, fontSize: 15, fontWeight: '400' },
-  caption: { ...base, fontSize: 13, fontWeight: '500', color: colors.textMuted },
+  display: { fontFamily: fonts.display, fontSize: 30 },
+  h1: { fontFamily: fonts.display, fontSize: 24 },
+  title: { fontFamily: fonts.bold, fontSize: 17 },
+  body: { fontFamily: fonts.body, fontSize: 15 },
+  caption: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.textMuted },
 };

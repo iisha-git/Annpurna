@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { useStreak } from './use-streak';
 import { AppText, Card } from '@/shared/ui';
-import { colors, radii, spacing } from '@/shared/theme/tokens';
+import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 
 /**
  * Flame counter for the Profile tab.
@@ -31,7 +31,7 @@ export default function StreakCard() {
       <View style={{ flex: 1 }}>
         <AppText variant="h1" style={styles.count}>
           {streak}
-          <AppText variant="h2" style={styles.unit}> day{streak === 1 ? '' : 's'}</AppText>
+          <AppText style={styles.unit}> day{streak === 1 ? '' : 's'}</AppText>
         </AppText>
         <AppText variant="caption" style={styles.caption}>
           {caption}
@@ -60,7 +60,9 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   unit: {
-    color: colors.text,
+    fontFamily: fonts.displayRegular,
+    fontSize: 15,
+    color: colors.textMuted,
   },
   caption: {
     marginTop: 2,

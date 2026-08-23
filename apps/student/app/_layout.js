@@ -1,6 +1,14 @@
 import { Stack } from 'expo-router';
 import { DefaultTheme, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
+import { Fredoka_400Regular, Fredoka_600SemiBold } from '@expo-google-fonts/fredoka';
+import {
+  Nunito_400Regular,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+} from '@expo-google-fonts/nunito';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -11,6 +19,17 @@ export const unstable_settings = {
 // Annpurna is a light, warm UI — we pin the navigation theme instead of
 // following the system dark mode until a dark palette exists.
 export default function RootLayout() {
+  // Fonts load JS-side at startup — no dev-build rebuild needed.
+  const [fontsLoaded] = useFonts({
+    Fredoka_400Regular,
+    Fredoka_600SemiBold,
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+  });
+  if (!fontsLoaded) return null;
+
   return (
     <ThemeProvider value={DefaultTheme}>
       <StatusBar style="dark" />

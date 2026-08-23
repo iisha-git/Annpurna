@@ -1,14 +1,15 @@
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Platform, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 
-import { colors } from '@/shared/theme/tokens';
+import { colors, fonts } from '@/shared/theme/tokens';
 
+// Rounded, food-friendly glyphs (MaterialCommunityIcons) for the cute vibe
 const TAB_ICON = {
-  index: ['home-outline', 'home'],
-  menu: ['restaurant-outline', 'restaurant'],
-  status: ['calendar-outline', 'calendar'],
-  profile: ['person-circle-outline', 'person-circle'],
+  index: ['home-variant-outline', 'home-variant'],
+  menu: ['food-outline', 'noodles'],
+  status: ['calendar-month-outline', 'calendar-month'],
+  profile: ['account-circle-outline', 'account-circle'],
 };
 
 export default function TabLayout() {
@@ -30,8 +31,8 @@ export default function TabLayout() {
           borderTopWidth: 0,
           ...Platform.select({
             ios: {
-              shadowColor: '#2B2118',
-              shadowOpacity: 0.3,
+              shadowColor: '#0E0B13',
+              shadowOpacity: 0.35,
               shadowRadius: 16,
               shadowOffset: { width: 0, height: 8 },
             },
@@ -52,7 +53,11 @@ export default function TabLayout() {
           options={{
             title,
             tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? TAB_ICON[name][1] : TAB_ICON[name][0]} size={24} color={color} />
+              <MaterialCommunityIcons
+                name={focused ? TAB_ICON[name][1] : TAB_ICON[name][0]}
+                size={24}
+                color={color}
+              />
             ),
           }}
         />
@@ -64,6 +69,6 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   label: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: fonts.bold,
   },
 });

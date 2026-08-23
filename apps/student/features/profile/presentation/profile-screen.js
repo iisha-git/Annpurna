@@ -1,10 +1,11 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { initialsFor } from '../domain/profile-model';
 import { useProfile } from './use-profile';
 import StreakCard from '../../streak/presentation/streak-card';
 import { AppText, Card, Screen } from '@/shared/ui';
-import { colors, radii, spacing } from '@/shared/theme/tokens';
+import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 
 export default function ProfileScreen() {
   const { loading, student } = useProfile();
@@ -42,13 +43,33 @@ export default function ProfileScreen() {
       {/* Crowd check-in streak */}
       <StreakCard />
 
-      <Card style={{ marginTop: spacing.md }}>
-        <AppText variant="caption">
-          Your mess number and monthly status are managed by the mess owner.
-          Leave requests are not made through this app.
+      {/* Good to know — scannable tiles instead of a wall of text */}
+      <View style={styles.knowWrap}>
+        <AppText variant="title" style={{ marginBottom: spacing.md }}>
+          Good to know
         </AppText>
-      </Card>
+        <KnowTile icon="food-croissant" tint={colors.accent} soft={colors.accentSoft}>
+          Meals & menu are curated by your mess owner
+        </KnowTile>
+        <KnowTile icon="calendar-check" tint={colors.success} soft={colors.successSoft}>
+          Leave days are arranged through your mess owner
+        </KnowTile>
+        <KnowTile icon="shield-lock" tint="#7B6CF6" soft="#EEEBFD">
+          Mess number & status are view-only — always in sync
+        </KnowTile>
+      </View>
     </Screen>
+  );
+}
+
+function KnowTile({ icon, tint, soft, children }) {
+  return (
+    <View style={styles.tile}>
+      <View style={[styles.tileIcon, { backgroundColor: soft }]}>
+        <MaterialCommunityIcons name={icon} size={20} color={tint} />
+      </View>
+      <AppText style={styles.tileText}>{children}</AppText>
+    </View>
   );
 }
 
@@ -99,5 +120,32 @@ const styles = StyleSheet.create({
   rowBordered: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
+  },
+  knowWrap: {
+    marginTop: spacing.md,
+  },
+  tile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  tileIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: radii.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  tileText: {
+    flex: 1,
+    fontSize: 13.5,
+    fontFamily: fonts.bodySemi,
+    color: colors.textMuted,
+    lineHeight: 19,
   },
 });
