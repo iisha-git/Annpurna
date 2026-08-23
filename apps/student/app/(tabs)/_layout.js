@@ -17,7 +17,7 @@ import { colors, fonts } from '@/shared/theme/tokens';
 //   dock height stays independent (62). Icons 28.
 // ─────────────────────────────────────────────────────────────────────────────
 const CIRCLE = 53;
-const BUBBLE_H = 57; // height-only stretch — the droplet reads as a tall egg
+const BUBBLE_H = 59; // height-only stretch — the droplet reads as a tall egg
 const DROP_W = Math.round(CIRCLE * 1.74);
 const DROP_H = Math.round(CIRCLE * 1.12);
 const FILLET = 17; // frozen — do NOT derive from CIRCLE anymore
