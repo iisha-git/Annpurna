@@ -9,16 +9,17 @@ import { colors, fonts } from '@/shared/theme/tokens';
 // DROPLET GEOMETRY — owner-approved proportions. Every size derives from
 // CIRCLE, so scaling the whole composition later = change ONE number.
 //
-//   bubble        = CIRCLE            (50 — pulled back a touch from 54)
-//   dropWrap      = CIRCLE × 1.74 wide, CIRCLE × 1.05 tall
+//   bubble        = CIRCLE wide × BUBBLE_H tall (54 × 58 — taller than wide)
+//   dropWrap      = CIRCLE × 1.74 wide, CIRCLE × 1.12 tall
 //   fillet        = FROZEN at 17 — owner wants curves unchanged while
 //                   the circle alone grows
 //   lift          = CIRCLE × 0.42
 //   dock height stays independent (62). Icons 28.
 // ─────────────────────────────────────────────────────────────────────────────
 const CIRCLE = 54;
+const BUBBLE_H = 58; // height-only stretch — the droplet reads as a tall egg
 const DROP_W = Math.round(CIRCLE * 1.74);
-const DROP_H = Math.round(CIRCLE * 1.05);
+const DROP_H = Math.round(CIRCLE * 1.12);
 const FILLET = 17; // frozen — do NOT derive from CIRCLE anymore
 const LIFT = -Math.round(CIRCLE * 0.42);
 
@@ -186,9 +187,9 @@ const styles = StyleSheet.create({
   bubble: {
     position: 'absolute',
     width: CIRCLE,
-    height: CIRCLE,
+    height: BUBBLE_H,
     borderRadius: CIRCLE / 2,
-    top: (DROP_H - CIRCLE) / 2 - 1,
+    top: (DROP_H - BUBBLE_H) / 2 - 1,
     left: (DROP_W - CIRCLE) / 2,
     backgroundColor: colors.background, // exact page "light skin" — reads as a hole in the dock
   },
