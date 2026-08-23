@@ -9,14 +9,14 @@ import { colors, fonts } from '@/shared/theme/tokens';
 // DROPLET GEOMETRY — owner-approved proportions. Every size derives from
 // CIRCLE, so scaling the whole composition later = change ONE number.
 //
-//   bubble        = CIRCLE            (54 now)
+//   bubble        = CIRCLE            (50 — pulled back a touch from 54)
 //   dropWrap      = CIRCLE × 1.74 wide, CIRCLE × 1.05 tall
 //   fillet        = FROZEN at 17 — owner wants curves unchanged while
 //                   the circle alone grows
 //   lift          = CIRCLE × 0.42
-//   dock height stays independent (62).
+//   dock height stays independent (62). Icons 28.
 // ─────────────────────────────────────────────────────────────────────────────
-const CIRCLE = 54;
+const CIRCLE = 50;
 const DROP_W = Math.round(CIRCLE * 1.74);
 const DROP_H = Math.round(CIRCLE * 1.05);
 const FILLET = 17; // frozen — do NOT derive from CIRCLE anymore
@@ -39,7 +39,7 @@ const TAB_ICON = {
  *           mid-rise and settles — classic squash-and-stretch.
  * Unfocused: sinks back into the dock.
  */
-function AnimatedTabIcon({ focused, name, size = 24 }) {
+function AnimatedTabIcon({ focused, name, size = 28 }) {
   const lift = useRef(new Animated.Value(focused ? LIFT : 0)).current;
   const squash = useRef(new Animated.Value(1)).current;
   const bubbleIn = useRef(new Animated.Value(focused ? 1 : 0)).current;
