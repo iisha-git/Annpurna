@@ -1,4 +1,5 @@
-import { SafeAreaView, StyleSheet } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '@/shared/theme/tokens';
 
