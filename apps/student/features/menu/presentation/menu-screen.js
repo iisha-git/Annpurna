@@ -55,7 +55,7 @@ export default function MenuScreen() {
           <AppText>Couldn't load the menu. Pull to retry later.</AppText>
         </Card>
       ) : (
-        <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
+        <View style={{ marginTop: spacing.sm, gap: spacing.sm }}>
           {dayMenu.meals.map((meal) => (
             <Card key={meal.slot} style={styles.mealCard}>
               <View style={styles.mealHeader}>
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   chipRow: {
     flexDirection: 'row',
     gap: spacing.sm,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
   },
   chip: {
     width: 44, // perfect circles, not pills — day initials only
