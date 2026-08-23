@@ -1,5 +1,6 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { initialsFor } from '../domain/profile-model';
 import { useProfile } from './use-profile';
@@ -10,6 +11,7 @@ import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 
 export default function ProfileScreen() {
   const { loading, student } = useProfile();
+  const insets = useSafeAreaInsets();
 
   if (loading) {
     return (
@@ -23,19 +25,30 @@ export default function ProfileScreen() {
   return (
     // Bottom padding = dock clearance — nothing may slide behind the droplet
     <Screen style={styles.screen}>
-      {/* Hero — espresso panel with the student's identity */}
-      <View style={styles.hero}>
-        <View style={styles.avatarRing}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initialsFor(student.name)}</Text>
+      {/*
+        Hero: a full-bleed espresso sheet pinned to the very top of the screen
+        (negative margin cancels the safe-area pad). Its bottom edge dissolves
+        into the warm page via stacked opacity strips — no native gradient
+        module needed.
+      */}
+      <View style={[styles.heroWrap, { marginTop: -insets.top }]}>
+        <View style={[styles.heroSolid, { paddingTop: insets.top + spacing.lg }]}>
+          <View style={styles.avatarRing}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initialsFor(student.name)}</Text>
+            </View>
+          </View>
+          <AppText variant="h1" style={styles.nameText}>
+            {student.name}
+          </AppText>
+          <View style={styles.messBadge}>
+            <AppText style={styles.messBadgeText}>Mess No. {student.messNumber}</AppText>
           </View>
         </View>
-        <AppText variant="h1" style={styles.nameText}>
-          {student.name}
-        </AppText>
-        <View style={styles.messBadge}>
-          <AppText style={styles.messBadgeText}>Mess No. {student.messNumber}</AppText>
-        </View>
+        {/* dissolve into transparency */}
+        <View style={styles.fadeA} />
+        <View style={styles.fadeB} />
+        <View style={styles.fadeC} />
       </View>
 
       {/* Quick stats — two friendly tiles instead of a table */}
@@ -100,13 +113,27 @@ const styles = StyleSheet.create({
   screen: {
     paddingBottom: 90, // dock clearance
   },
-  hero: {
+  heroWrap: {
+    // full-bleed: cancel the Screen's horizontal padding
+    marginHorizontal: -spacing.xl,
+  },
+  heroSolid: {
     alignItems: 'center',
     backgroundColor: colors.dark,
-    borderRadius: radii.lg,
-    paddingVertical: spacing.xl,
+    paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
-    marginTop: spacing.sm,
+  },
+  fadeA: {
+    height: 14,
+    backgroundColor: 'rgba(14,11,19,0.5)',
+  },
+  fadeB: {
+    height: 10,
+    backgroundColor: 'rgba(14,11,19,0.22)',
+  },
+  fadeC: {
+    height: 7,
+    backgroundColor: 'rgba(14,11,19,0.08)',
   },
   avatarRing: {
     padding: 4,
@@ -146,7 +173,7 @@ const styles = StyleSheet.create({
   statRow: {
     flexDirection: 'row',
     gap: spacing.sm,
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
   },
   statTile: {
     flex: 1,
