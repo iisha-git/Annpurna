@@ -16,7 +16,7 @@ import { colors, fonts } from '@/shared/theme/tokens';
 //   lift          = CIRCLE × 0.42     (16)
 //   dock height stays independent (62).
 // ─────────────────────────────────────────────────────────────────────────────
-const CIRCLE = 38;
+const CIRCLE = 46;
 const DROP_W = Math.round(CIRCLE * 1.74); // 66
 const DROP_H = Math.round(CIRCLE * 1.05); // 40
 const FILLET = Math.round(CIRCLE * 0.37); // 14
