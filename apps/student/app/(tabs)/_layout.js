@@ -205,11 +205,11 @@ const styles = StyleSheet.create({
   // curving down-and-outward from the bubble's equator
   filletCutL: {
     position: 'absolute',
-    left: -17,
-    bottom: -17,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    left: -15,
+    bottom: -15,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: colors.dark,
   },
   filletR: {
@@ -223,11 +223,11 @@ const styles = StyleSheet.create({
   },
   filletCutR: {
     position: 'absolute',
-    right: -17,
-    bottom: -17,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    right: -15,
+    bottom: -15,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: colors.dark,
   },
 });
