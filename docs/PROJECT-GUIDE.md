@@ -43,7 +43,13 @@ Annpurna/                      ← git repo root
     │   └── ui/                ← reusable building blocks (Card, Button…)
     ├── features/              ← business areas, each split into 3 layers
     │   ├── crowd/domain/crowd-model.js
-    │   └── menu | mess-status | profile | streak   (skeletons for now)
+    │   └── menu/              ← FIRST COMPLETE FEATURE (Step 2)
+    │       ├── domain/menu-model.js        ← meal/weekday types + helpers
+    │       ├── data/menu-repository.js     ← mock data source (swap for API later)
+    │       └── presentation/
+    │           ├── menu-screen.js          ← the actual UI
+    │           └── use-weekly-menu.js      ← custom hook that loads the data
+    │   └── mess-status | profile | streak   (skeletons for now)
     ├── assets/images/         ← app icon, splash screen images
     ├── app.json               ← app identity: name, icon, splash colors
     ├── package.json           ← dependencies + scripts
@@ -103,6 +109,36 @@ The crowd feature's vocabulary: `CrowdStatus`, `CrowdReport`, `MessVisit` descri
 
 ---
 
+## 3.5 Anatomy of a feature — the Menu (read this twice)
+
+Menu is our template for every future feature:
+
+```
+app/(tabs)/menu.js            ← 5-line ROUTE: just renders MenuScreen
+features/menu/
+  domain/menu-model.js        ← WHAT a menu is (types, weekday helpers)
+  data/menu-repository.js     ← WHERE data comes from (mock today, API tomorrow)
+  presentation/
+    use-weekly-menu.js        ← HOW the screen gets data (loading/week/error)
+    menu-screen.js            ← WHAT you see
+```
+
+Data flow on screen:
+```
+MenuScreen mounts → useWeeklyMenu() → menuRepository.getWeeklyMenu()
+                  → fake 600ms delay → weekly data → state updates → UI renders
+```
+
+**Why the repository layer matters:** the screen never knows data was hardcoded.
+When the owner panel exists and menus live in a database, we rewrite ONLY
+`menu-repository.js` internals. Zero UI changes. This is the single most
+important architecture idea in this project.
+
+**Route-file pattern:** files in `app/` are URLs, so they stay thin wrappers;
+real screens live in their feature folder. Keeps navigation separate from logic.
+
+---
+
 ## 4. React Native concepts you need (crash course)
 
 | Concept | Meaning | Example in our code |
@@ -116,8 +152,24 @@ The crowd feature's vocabulary: `CrowdStatus`, `CrowdReport`, `MessVisit` descri
 | **SafeAreaView** | Container respecting notch/status bar | inside `Screen` |
 | **Pressable** | Touchable wrapper with pressed states | inside `Button` |
 | **Layout** | Flexbox by default: `flex: 1` fills space | every screen root |
+| **useState** | Remembers a value across renders; changing it re-renders | `selectedDay` in MenuScreen |
+| **useEffect** | Runs side-effects (fetching, timers) after render; `[]` deps = once | `useWeeklyMenu` |
+| **Custom hook** | Your own `useXxx()` function bundling state+effects | `useWeeklyMenu` |
+| **ActivityIndicator** | Built-in spinner for loading states | MenuScreen loading branch |
+| **ScrollView horizontal** | Horizontally scrollable row (day chips) | MenuScreen |
+| **key prop** | Unique id for each item in a rendered list — React needs it to track items | `key={meal.slot}` |
 
 RN core components replace web tags: `<View>`≈div, `<Text>`≈p (all text MUST be inside Text), `<Pressable>`≈button.
+
+---
+
+## 4.5 Troubleshooting — lessons already learned
+
+| Error | Cause | Lesson |
+|---|---|---|
+| "Project is incompatible with this version of Expo Go" | Play Store Expo Go lags behind newest SDK (we're on SDK 57) | We solved this permanently with our own dev build from EAS |
+| `Cannot read property 'create' of undefined` at `StyleSheet.create` | Imported `StyleSheet` from the wrong library (`react-native-safe-area-context`) | `StyleSheet`, `View`, `Text`, `Pressable` come ONLY from `'react-native'`; libraries export just their own tools |
+| Red screen after an error is fixed | Bundler kept the crashed state | Press `r` in the expo terminal for a full reload |
 
 ---
 
@@ -147,3 +199,5 @@ Install **Expo Go** on your phone → scan QR → instant live testing.
 ## Changelog
 
 - **Step 1** — Scaffolded Expo app, design system, tab shell, crowd domain model. First push to GitHub.
+- **Setup** — EAS linked (`eas init`), dev build configured and installed on phone; `expo-dev-client` replaces Expo Go.
+- **Step 2** — Menu feature end-to-end: domain model, mock repository (simulated latency), custom hook, day-chip selector UI, route-wrapper pattern.

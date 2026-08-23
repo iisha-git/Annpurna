@@ -1,18 +1,7 @@
-import { AppText, Card, Screen } from '@/shared/ui';
+import MenuScreen from '@/features/menu/presentation/menu-screen';
 
-// Placeholder — will render the menu from features/menu
-export default function MenuScreen() {
-  return (
-    <Screen>
-      <AppText variant="h1">Menu</AppText>
-      <AppText variant="caption">What's cooking today</AppText>
-
-      <Card style={{ marginTop: 16 }}>
-        <AppText variant="title">Today's Menu</AppText>
-        <AppText style={{ marginTop: 8 }}>
-          Breakfast, lunch and dinner menus will appear here.
-        </AppText>
-      </Card>
-    </Screen>
-  );
+// Thin route file — the actual screen lives in the menu feature.
+// This keeps navigation and feature code decoupled.
+export default function MenuRoute() {
+  return <MenuScreen />;
 }
