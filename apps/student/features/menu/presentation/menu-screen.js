@@ -88,9 +88,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   chip: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs + 4,
-    borderRadius: radii.pill,
+    width: 44, // perfect circles, not pills — day initials only
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
@@ -100,8 +102,8 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
   },
   chipText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
     color: colors.textMuted,
   },
   chipTextSelected: {
