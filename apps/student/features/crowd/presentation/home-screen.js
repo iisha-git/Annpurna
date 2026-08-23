@@ -67,7 +67,6 @@ export default function HomeScreen() {
               <AppText style={styles.messChipText}>Mess No. {student?.messNumber ?? '—'}</AppText>
             </View>
           </View>
-          </View>
           <Image source={MASCOT} style={styles.mascot} resizeMode="contain" />
         </View>
       </SafeAreaView>
