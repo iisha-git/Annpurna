@@ -1,6 +1,6 @@
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 
 import CrowdCard from './crowd-card';
@@ -28,6 +28,7 @@ export default function HomeScreen() {
   const snap = useCrowdStatus();
   const { student } = useProfile();
   const { streak } = useStreak();
+  const insets = useSafeAreaInsets(); // absolute children ignore SafeArea padding
   const [promptClosed, setPromptClosed] = useState(false);
   const [devOpen, setDevOpen] = useState(false);
 
@@ -46,7 +47,7 @@ export default function HomeScreen() {
         <HeaderDoodles />
 
         {/* Streak lives in the corner — flame up top, day count under it */}
-        <View style={styles.streakCorner} pointerEvents="none">
+        <View style={[styles.streakCorner, { top: insets.top + 10 }]} pointerEvents="none">
           <DoodleFlame
             size={34}
             color={streak > 0 ? '#FFB13D' : 'rgba(255,246,232,0.30)'}
@@ -182,7 +183,6 @@ const styles = StyleSheet.create({
   },
   streakCorner: {
     position: 'absolute',
-    top: spacing.md,
     right: spacing.xl,
     alignItems: 'center',
   },
