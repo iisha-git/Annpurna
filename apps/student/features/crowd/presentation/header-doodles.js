@@ -36,8 +36,10 @@ function FloatingDoodle({ style, dur = 3400, delay = 0, range = 6, opacity = 0.6
     { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [range / 2, -range / 2] }) },
   ];
   if (wobble) {
+    // Math.abs guards against negative wobble producing '--7deg'
+    const deg = Math.abs(wobble);
     transform.push({
-      rotate: v.interpolate({ inputRange: [0, 1], outputRange: [`-${wobble}deg`, `${wobble}deg`] }),
+      rotate: v.interpolate({ inputRange: [0, 1], outputRange: [`-${deg}deg`, `${deg}deg`] }),
     });
   }
 
