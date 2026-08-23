@@ -194,8 +194,8 @@ const styles = StyleSheet.create({
   },
   filletL: {
     position: 'absolute',
-    left: (DROP_W - CIRCLE) / 2 - FILLET + 8.5, // overlapping INTO the bubble's edge
-    top: DROP_H / 2 - 1,
+    left: (DROP_W - CIRCLE) / 2 - FILLET + 10, // overlapping INTO the bubble's edge
+    top: DROP_H / 2 + 0.5,
     width: FILLET,
     height: FILLET,
     backgroundColor: colors.background,
@@ -205,17 +205,17 @@ const styles = StyleSheet.create({
   // curving down-and-outward from the bubble's equator
   filletCutL: {
     position: 'absolute',
-    left: -14,
-    bottom: -14,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    left: -17,
+    bottom: -17,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: colors.dark,
   },
   filletR: {
     position: 'absolute',
-    right: (DROP_W - CIRCLE) / 2 - FILLET + 8.5,
-    top: DROP_H / 2 - 1,
+    right: (DROP_W - CIRCLE) / 2 - FILLET + 10,
+    top: DROP_H / 2 + 0.5,
     width: FILLET,
     height: FILLET,
     backgroundColor: colors.background,
@@ -223,11 +223,11 @@ const styles = StyleSheet.create({
   },
   filletCutR: {
     position: 'absolute',
-    right: -14,
-    bottom: -14,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    right: -17,
+    bottom: -17,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: colors.dark,
   },
 });
