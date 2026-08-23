@@ -69,7 +69,7 @@ export default function MenuScreen() {
                 </AppText>
               </View>
               <AppText variant="caption" numberOfLines={2} style={styles.mealItems}>
-                {meal.items.join('   ·   ')}
+                {meal.items.join(', ')}
               </AppText>
             </Card>
           ))}
