@@ -74,7 +74,7 @@ export default function HomeScreen() {
 
       {/* ── Main content ── */}
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: spacing.xl, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: spacing.xl, paddingBottom: 90 }}
         showsVerticalScrollIndicator={false}>
         <View style={styles.sectionCaption}>
           <DoodleBowl size={22} color={colors.accent} />

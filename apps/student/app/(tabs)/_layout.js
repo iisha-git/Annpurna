@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Animated, Easing, Platform, StyleSheet, View } from 'react-native';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
@@ -87,23 +87,16 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.accentOnDark,
         tabBarInactiveTintColor: 'rgba(251,247,242,0.55)',
         tabBarStyle: {
+          // Docked flat to the bottom edge — full width, rounded shoulders up top
           position: 'absolute',
-          bottom: 18,
-          left: 18,
-          right: 18,
+          bottom: 0,
+          left: 0,
+          right: 0,
           height: 62,
-          borderRadius: 20,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
           backgroundColor: colors.dark,
           borderTopWidth: 0,
-          ...Platform.select({
-            ios: {
-              shadowColor: '#0E0B13',
-              shadowOpacity: 0.35,
-              shadowRadius: 16,
-              shadowOffset: { width: 0, height: 8 },
-            },
-            android: { elevation: 10 },
-          }),
         },
         tabBarLabelStyle: styles.label,
       }}>
