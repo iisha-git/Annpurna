@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   },
   filletL: {
     position: 'absolute',
-    left: (DROP_W - CIRCLE) / 2 - FILLET - 2.5, // overlapping INTO the bubble's edge
+    left: (DROP_W - CIRCLE) / 2 - FILLET + 4, // overlapping INTO the bubble's edge
     top: DROP_H / 2 - 2.5,
     width: FILLET,
     height: FILLET,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   filletR: {
     position: 'absolute',
-    right: (DROP_W - CIRCLE) / 2 - FILLET - 2.5,
+    right: (DROP_W - CIRCLE) / 2 - FILLET + 4,
     top: DROP_H / 2 - 2.5,
     width: FILLET,
     height: FILLET,
