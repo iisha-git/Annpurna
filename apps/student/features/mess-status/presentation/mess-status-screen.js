@@ -10,7 +10,8 @@ import {
 } from '../domain/mess-status-model';
 import { useMonthlyStatus } from './use-monthly-status';
 import { AppText, Card, Screen } from '@/shared/ui';
-import { colors, radii, spacing } from '@/shared/theme/tokens';
+import { DoodleFlame } from '@/shared/ui/doodles/Doodles';
+import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 
 export default function MessStatusScreen() {
   const now = new Date();
@@ -37,28 +38,40 @@ export default function MessStatusScreen() {
   const days = Array.from({ length: totalDays }, (_, i) => i + 1);
 
   return (
-    <Screen>
-      <AppText variant="h1">Mess Status</AppText>
-      <AppText variant="caption">Your month, as the mess recorded it</AppText>
-
-      <Card style={{ marginTop: 16 }}>
-        {/* Month navigation */}
-        <View style={styles.monthRow}>
-          <Pressable onPress={goPrev} hitSlop={12}>
-            <Ionicons name="chevron-back" size={22} color={colors.accent} />
-          </Pressable>
-          <AppText variant="title">
-            {MONTH_NAMES[viewed.month]} {viewed.year}
+    // Bottom padding = dock clearance — nothing may slide behind the droplet
+    <Screen style={styles.screen}>
+      {/* Hero band — echoes the Home header */}
+      <View style={styles.hero}>
+        <View style={{ flex: 1 }}>
+          <AppText variant="h1" style={styles.heroTitle}>
+            Mess Status
           </AppText>
-          <Pressable onPress={goNext} hitSlop={12} disabled={atCurrentMonth}>
-            <Ionicons
-              name="chevron-forward"
-              size={22}
-              color={atCurrentMonth ? colors.border : colors.accent}
-            />
-          </Pressable>
+          <AppText variant="caption" style={styles.heroCaption}>
+            Your month, as the mess recorded it
+          </AppText>
         </View>
+        <DoodleFlame size={44} color={colors.accent} />
+      </View>
 
+      {/* Floating month switcher */}
+      <View style={styles.monthPill}>
+        <Pressable onPress={goPrev} hitSlop={12} style={styles.chevron}>
+          <Ionicons name="chevron-back" size={20} color={colors.accentOnDark} />
+        </Pressable>
+        <Text style={styles.monthLabel}>
+          {MONTH_NAMES[viewed.month]} {viewed.year}
+        </Text>
+        <Pressable onPress={goNext} hitSlop={12} disabled={atCurrentMonth} style={styles.chevron}>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={atCurrentMonth ? 'rgba(255,201,107,0.25)' : colors.accentOnDark}
+          />
+        </Pressable>
+      </View>
+
+      {/* Calendar card */}
+      <Card>
         {/* Weekday header */}
         <View style={styles.grid}>
           {WEEKDAY_INITIALS.map((d) => (
@@ -96,41 +109,96 @@ export default function MessStatusScreen() {
         )}
       </Card>
 
-      {/* Legend */}
+      {/* Legend as soft chips */}
       <View style={styles.legend}>
-        <Dot color={colors.success} />
-        <AppText variant="caption">Present</AppText>
-        <Dot color={colors.danger} style={{ marginLeft: 20 }} />
-        <AppText variant="caption">Approved Leave</AppText>
+        <View style={styles.legendChip}>
+          <Dot color={colors.success} />
+          <AppText variant="caption">Present</AppText>
+        </View>
+        <View style={styles.legendChip}>
+          <Dot color={colors.danger} />
+          <AppText variant="caption">Approved Leave</AppText>
+        </View>
       </View>
     </Screen>
   );
 }
 
 function DayCell({ day, status, isToday }) {
-  const dotColor =
-    status === 'PRESENT' ? colors.success : status === 'APPROVED_LEAVE' ? colors.danger : colors.border;
-
   return (
     <View style={styles.cell}>
-      <View style={[styles.dayNumber, isToday && styles.todayRing]}>
-        <Text style={[styles.dayText, !status && styles.futureDayText]}>{day}</Text>
+      <View
+        style={[
+          styles.dayBubble,
+          status === 'PRESENT' && styles.presentBubble,
+          status === 'APPROVED_LEAVE' && styles.leaveBubble,
+          !status && styles.emptyBubble,
+          isToday && styles.todayRing,
+        ]}>
+        <Text
+          style={[
+            styles.dayText,
+            status === 'PRESENT' && styles.presentText,
+            status === 'APPROVED_LEAVE' && styles.leaveText,
+            !status && styles.futureDayText,
+          ]}>
+          {day}
+        </Text>
       </View>
-      <Dot color={dotColor} />
     </View>
   );
 }
 
-function Dot({ color, style }) {
-  return <View style={[styles.dot, { backgroundColor: color }, style]} />;
+function Dot({ color }) {
+  return <View style={[styles.dot, { backgroundColor: color }]} />;
 }
 
 const styles = StyleSheet.create({
-  monthRow: {
+  screen: {
+    paddingBottom: 90, // dock clearance
+  },
+  hero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.dark,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    marginTop: spacing.sm,
+  },
+  heroTitle: {
+    color: colors.textLight, // cream on the espresso panel
+  },
+  heroCaption: {
+    color: '#FFC96B',
+    marginTop: 2,
+  },
+  monthPill: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 14,
+    alignSelf: 'center',
+    backgroundColor: colors.dark,
+    borderRadius: radii.pill,
+    paddingLeft: spacing.xs,
+    paddingRight: spacing.xs,
+    paddingVertical: spacing.xs,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
+    minWidth: 210,
+  },
+  chevron: {
+    width: 34,
+    height: 34,
+    borderRadius: radii.pill,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthLabel: {
+    fontFamily: fonts.display,
+    fontSize: 15,
+    color: colors.textLight,
   },
   grid: {
     flexDirection: 'row',
@@ -144,40 +212,68 @@ const styles = StyleSheet.create({
   },
   weekdayLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.textMuted,
   },
-  dayNumber: {
-    width: 26,
-    height: 26,
+  // Status now fills the whole bubble — colour carries the meaning at a glance
+  dayBubble: {
+    width: 30,
+    height: 30,
     borderRadius: radii.pill,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
   },
+  presentBubble: {
+    backgroundColor: colors.successSoft,
+  },
+  leaveBubble: {
+    backgroundColor: colors.dangerSoft,
+  },
+  emptyBubble: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
   todayRing: {
     borderColor: colors.accent,
+    borderWidth: 2,
   },
   dayText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontFamily: fonts.bodyBold,
+    fontSize: 12.5,
     color: colors.text,
+  },
+  presentText: {
+    color: colors.success,
+  },
+  leaveText: {
+    color: colors.danger,
   },
   futureDayText: {
     color: colors.textMuted,
-    fontWeight: '400',
+    fontFamily: fonts.body,
   },
   dot: {
-    width: 6,
-    height: 6,
+    width: 8,
+    height: 8,
     borderRadius: radii.pill,
-    marginTop: 4,
   },
   legend: {
     flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  legendChip: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.lg,
-    paddingLeft: spacing.xs,
+    gap: spacing.xs + 2,
+    backgroundColor: colors.surface,
+    borderRadius: radii.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
   },
 });

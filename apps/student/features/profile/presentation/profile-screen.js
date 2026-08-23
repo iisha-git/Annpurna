@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { initialsFor } from '../domain/profile-model';
 import { useProfile } from './use-profile';
 import StreakCard from '../../streak/presentation/streak-card';
-import { AppText, Card, Screen } from '@/shared/ui';
+import { AppText, Screen } from '@/shared/ui';
 import { DoodleSparkles } from '@/shared/ui/doodles/Doodles';
 import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 
@@ -21,13 +21,16 @@ export default function ProfileScreen() {
   if (!student) return null;
 
   return (
-    <Screen>
-      {/* Identity block */}
-      <View style={styles.identity}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initialsFor(student.name)}</Text>
+    // Bottom padding = dock clearance — nothing may slide behind the droplet
+    <Screen style={styles.screen}>
+      {/* Hero — espresso panel with the student's identity */}
+      <View style={styles.hero}>
+        <View style={styles.avatarRing}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initialsFor(student.name)}</Text>
+          </View>
         </View>
-        <AppText variant="h1" style={{ marginTop: spacing.md }}>
+        <AppText variant="h1" style={styles.nameText}>
           {student.name}
         </AppText>
         <View style={styles.messBadge}>
@@ -35,11 +38,15 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Details */}
-      <Card style={{ marginTop: spacing.xl }}>
-        <DetailRow label="Course" value={student.course} />
-        <DetailRow label="Room" value={student.room} last />
-      </Card>
+      {/* Quick stats — two friendly tiles instead of a table */}
+      <View style={styles.statRow}>
+        <StatTile icon="graduation-cap" tint={colors.accent} soft={colors.accentSoft} label="Course">
+          {student.course}
+        </StatTile>
+        <StatTile icon="bed-double-outline" tint="#7B6CF6" soft="#EEEBFD" label="Room">
+          {student.room}
+        </StatTile>
+      </View>
 
       {/* Crowd check-in streak */}
       <StreakCard />
@@ -64,6 +71,20 @@ export default function ProfileScreen() {
   );
 }
 
+function StatTile({ icon, tint, soft, label, children }) {
+  return (
+    <View style={styles.statTile}>
+      <View style={[styles.statIcon, { backgroundColor: soft }]}>
+        <MaterialCommunityIcons name={icon} size={22} color={tint} />
+      </View>
+      <AppText variant="caption">{label}</AppText>
+      <AppText numberOfLines={1} style={styles.statValue}>
+        {children}
+      </AppText>
+    </View>
+  );
+}
+
 function KnowTile({ icon, tint, soft, children }) {
   return (
     <View style={styles.tile}>
@@ -75,56 +96,84 @@ function KnowTile({ icon, tint, soft, children }) {
   );
 }
 
-function DetailRow({ label, value, last = false }) {
-  return (
-    <View style={[styles.row, !last && styles.rowBordered]}>
-      <AppText color={colors.textMuted}>{label}</AppText>
-      <AppText>{value}</AppText>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  identity: {
+  screen: {
+    paddingBottom: 90, // dock clearance
+  },
+  hero: {
     alignItems: 'center',
-    marginTop: spacing.xl,
+    backgroundColor: colors.dark,
+    borderRadius: radii.lg,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.sm,
+  },
+  avatarRing: {
+    padding: 4,
+    borderRadius: radii.pill,
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,157,0,0.45)', // amber halo on the dark panel
   },
   avatar: {
-    width: 96,
-    height: 96,
+    width: 84,
+    height: 84,
     borderRadius: radii.pill,
     backgroundColor: colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    fontSize: 34,
-    fontWeight: '700',
-    color: colors.accent,
+    fontFamily: fonts.display,
+    fontSize: 30,
+    color: colors.accentPressed,
+  },
+  nameText: {
+    color: colors.textLight,
+    marginTop: spacing.md,
   },
   messBadge: {
     marginTop: spacing.sm,
     paddingHorizontal: spacing.lg,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: radii.pill,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: colors.accent, // solid amber — same chip language as Home
   },
   messBadgeText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.accent,
+    fontFamily: fonts.bodyBold,
+    fontSize: 12.5,
+    color: colors.textDark,
   },
-  row: {
+  statRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
+    gap: spacing.sm,
+    marginTop: spacing.md,
   },
-  rowBordered: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+  statTile: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    alignItems: 'flex-start',
+  },
+  statIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  statValue: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    color: colors.text,
+    marginTop: 1,
   },
   knowWrap: {
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
   },
   knowTitle: {
     flexDirection: 'row',
@@ -137,6 +186,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: radii.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
@@ -144,7 +195,7 @@ const styles = StyleSheet.create({
   tileIcon: {
     width: 38,
     height: 38,
-    borderRadius: radii.sm,
+    borderRadius: radii.pill, // circles, not squares — softer with the new identity
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
