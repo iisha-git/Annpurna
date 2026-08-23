@@ -57,8 +57,8 @@ export default function CrowdCard({ status }) {
         {Array.from({ length: TOTAL_PEOPLE }, (_, i) => (
           <Ionicons
             key={i}
-            name="person"
-            size={22}
+            name="body"
+            size={24}
             color={i < meta.people ? meta.color : 'rgba(43,33,24,0.16)'}
           />
         ))}
