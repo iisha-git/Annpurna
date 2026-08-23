@@ -165,17 +165,15 @@ const styles = StyleSheet.create({
   messChip: {
     alignSelf: 'flex-start',
     marginTop: spacing.md,
-    backgroundColor: 'rgba(255,157,0,0.16)', // amber-tinted pill
+    backgroundColor: colors.accent, // solid amber — pops off the dark card
     borderRadius: radii.pill,
-    paddingVertical: 6,
+    paddingVertical: 7,
     paddingHorizontal: spacing.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255,157,0,0.35)',
   },
   messChipText: {
-    fontSize: 13,
-    fontFamily: fonts.bodySemi,
-    color: '#FFC96B',
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    color: '#17141A', // dark ink on amber for max contrast
   },
   mascot: {
     width: 152,
