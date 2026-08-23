@@ -1,6 +1,6 @@
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { useEffect, useRef } from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { RECOMMENDATIONS, WAIT_ESTIMATES } from '../domain/crowd-rules';
 import { AppText, Card } from '@/shared/ui';
@@ -55,10 +55,10 @@ export default function CrowdCard({ status }) {
       {/* People meter — "how full does the mess feel?" */}
       <View style={styles.peopleRow}>
         {Array.from({ length: TOTAL_PEOPLE }, (_, i) => (
-          <Ionicons
+          <MaterialCommunityIcons
             key={i}
-            name="body"
-            size={24}
+            name="human-handsdown"
+            size={26}
             color={i < meta.people ? meta.color : 'rgba(43,33,24,0.16)'}
           />
         ))}
