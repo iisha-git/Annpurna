@@ -1,18 +1,6 @@
-import { AppText, Card, Screen } from '@/shared/ui';
+import HomeScreen from '@/features/crowd/presentation/home-screen';
 
-// Placeholder — will render live CrowdStatus from features/crowd
-export default function HomeScreen() {
-  return (
-    <Screen>
-      <AppText variant="h1">Home</AppText>
-      <AppText variant="caption">Know before you go</AppText>
-
-      <Card style={{ marginTop: 16 }}>
-        <AppText variant="title">Crowd Status</AppText>
-        <AppText style={{ marginTop: 8 }}>
-          Live crowd level and wait-time estimate will appear here.
-        </AppText>
-      </Card>
-    </Screen>
-  );
+// Home IS the crowd feature — Annpurna's core question lives here.
+export default function HomeRoute() {
+  return <HomeScreen />;
 }

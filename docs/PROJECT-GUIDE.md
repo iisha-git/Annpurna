@@ -34,34 +34,30 @@ Annpurna/                      ← git repo root
     │   ├── +not-found.js      ← shown for unknown URLs/routes
     │   └── (tabs)/            ← the bottom tab bar section
     │       ├── _layout.js     ← defines the 4 tabs
-    │       ├── index.js       ← Home tab ("/" route)
+    │       ├── index.js       ← Home tab = THE CROWD SCREEN (route wrapper)
     │       ├── menu.js        ← Menu tab (/menu)
     │       ├── status.js      ← Mess Status tab (/status)
     │       └── profile.js     ← Profile tab (/profile)
     ├── shared/                ← used by ALL features
     │   ├── theme/tokens.js    ← colors, spacing, fonts — single source of truth
     │   └── ui/                ← reusable building blocks (Card, Button…)
-    ├── features/              ← business areas, each split into 3 layers
-    │   ├── crowd/domain/crowd-model.js
-    │   └── menu/              ← FIRST COMPLETE FEATURE (Step 2)
-    │       ├── domain/menu-model.js        ← meal/weekday types + helpers
-    │       ├── data/menu-repository.js     ← mock data source (swap for API later)
-    │       └── presentation/
-    │           ├── menu-screen.js          ← the actual UI
-    │           └── use-weekly-menu.js      ← custom hook that loads the data
-    │   ├── mess-status/        ← Step 3: monthly calendar (green/red dots)
-    │       ├── domain/mess-status-model.js  ← calendar math (days, blanks, future check)
-    │       ├── data/mess-status-repository.js ← mock attendance/leave records
-    │       └── presentation/
-    │           ├── use-monthly-status.js   ← hook that reloads when month changes
-    │           └── mess-status-screen.js   ← the calendar UI
-    │   ├── profile/            ← Step 4: student identity (view-only)
-    │   │   ├── domain/profile-model.js     ← Student type + mess-number rule
-    │   │   ├── data/profile-repository.js  ← mock "signed-in" student
-    │   │   └── presentation/               ← use-profile.js + profile-screen.js
-    │   └── streak             (skeleton for now)
+    ├── features/
+    │   ├── crowd/             ← Step 5: THE CORE FEATURE
+    │   │   ├── domain/crowd-model.js      ← CrowdStatus / Report / Visit types
+    │   │   ├── domain/crowd-rules.js      ← aggregation + override resolution (PURE)
+    │   │   ├── data/mock-crowd-repository.js  ← simulates GPS+push+other students
+    │   │   └── presentation/
+    │   │       ├── use-crowd-status.js    ← live subscription hook
+    │   │       ├── crowd-card.js          ← hero status card
+    │   │       ├── crowd-feedback-prompt.js ← push-notification stand-in modal
+    │   │       └── home-screen.js         ← composition + dev simulation panel
+    │   ├── menu/              ← complete feature (Step 2 pattern reference)
+    │   ├── mess-status/       ← complete feature (Step 3)
+    │   ├── profile/           ← complete feature (Step 4)
+    │   └── streak/            ← skeleton (upcoming)
     ├── assets/images/         ← app icon, splash screen images
     ├── app.json               ← app identity: name, icon, splash colors
+    ├── eas.json               ← cloud build profiles (dev/preview/production)
     ├── package.json           ← dependencies + scripts
     ├── jsconfig.json          ← enables the @/ import shortcut
     └── .gitignore             ← files git must ignore (node_modules etc.)
@@ -179,6 +175,39 @@ Leading blank cells push day 1 onto the correct weekday. Pure math, no library.
 
 ---
 
+## 3.6 The crowd engine — how "live data" works without a backend
+
+`data/mock-crowd-repository.js` is the most important file to understand:
+
+```
+enterMess() ──► visit created ──► (8s, real: ~10 min) ──► feedbackPending = true
+                                                              │
+                                              Home shows the prompt modal
+                                                              │
+submitFeedback(level) ──► report stored (ONE per visit) ──► emit()
+                                                              │
+synthetic fake-student reports on a 12s timer ────────────────┤
+                                                              ▼
+                            getSnapshot(): aggregate fresh reports (30-min window)
+                                          → resolveCrowdStatus(ownerOverride wins?)
+                                          → { status, ... } pushed to subscribers
+```
+
+Key ideas:
+- **Pub/sub**: `subscribe(listener)` + `emit()`. The hook `useCrowdStatus` subscribes;
+  React re-renders whenever a new snapshot arrives. Same pattern real-time backends use.
+- **Snapshot pattern**: state is never mutated in place — a fresh object is computed
+  and handed out. UI can't corrupt engine internals.
+- **Business rules live in `domain/crowd-rules.js`** as pure functions with the agreed
+  defaults baked in (30-min validity, tie→higher level, min 3 responses, override wins).
+- **`__DEV__`**: RN global, true only in dev builds — that's why Simulation tools
+  will vanish from production APKs automatically.
+- **Cross-feature imports stay one-way** (crowd reads profile for the greeting).
+  Circular imports = bugs; if two features ever need each other, move shared code down
+  into domain or shared/.
+
+---
+
 ## 4.5 Troubleshooting — lessons already learned
 
 | Error | Cause | Lesson |
@@ -219,3 +248,4 @@ Install **Expo Go** on your phone → scan QR → instant live testing.
 - **Step 2** — Menu feature end-to-end: domain model, mock repository (simulated latency), custom hook, day-chip selector UI, route-wrapper pattern.
 - **Step 3** — Monthly Mess Status calendar: month navigation (clamped to today), 7-column dot grid, green=present / red=approved leave, future days blank. Mock leaves hardcoded per month.
 - **Step 4** — Profile screen: initials avatar, owner-assigned mess number badge (`/^\d{2,3}$/` rule lives in domain), detail rows. Reinforces: students never edit mess data.
+- **Step 5** — Crowd feature core: mock engine simulating GPS entry → delayed prompt → one-tap feedback (one-per-visit) → live aggregation with 30-min validity + majority/tie rules → owner override priority. Home = live crowd card; notification-style prompt modal; dev-only simulation panel.
