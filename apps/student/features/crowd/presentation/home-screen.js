@@ -62,7 +62,7 @@ export default function HomeScreen() {
         <View style={styles.sectionCaption}>
           <DoodleBowl size={22} color={colors.accent} />
           <AppText variant="caption" style={{ flex: 1 }}>
-            Here's how the mess looks right now
+            Before you walk in…
           </AppText>
         </View>
 
