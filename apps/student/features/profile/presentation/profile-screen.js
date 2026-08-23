@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ImageBackground, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -26,29 +26,41 @@ export default function ProfileScreen() {
     // Bottom padding = dock clearance — nothing may slide behind the droplet
     <Screen style={styles.screen}>
       {/*
-        Hero: a full-bleed espresso sheet pinned to the very top of the screen
-        (negative margin cancels the safe-area pad). Its bottom edge dissolves
-        into the warm page via stacked opacity strips — no native gradient
-        module needed.
+        Hero: a full-bleed cover IMAGE pinned to the very top of the screen
+        (negative margin cancels the safe-area pad), dimmed by an espresso
+        overlay so the identity stays readable, then dissolving into the warm
+        page via graduated opacity strips.
+
+        PLACEHOLDER: swap the require() below for the student's cover photo
+        once the backend serves one — layout won't need to change.
       */}
       <View style={[styles.heroWrap, { marginTop: -insets.top }]}>
-        <View style={[styles.heroSolid, { paddingTop: insets.top + spacing.lg }]}>
-          <View style={styles.avatarRing}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initialsFor(student.name)}</Text>
+        <ImageBackground
+          source={require('@/assets/images/icon.png')}
+          style={[styles.heroSolid, { paddingTop: insets.top + spacing.lg }]}
+          imageStyle={styles.heroImage}>
+          <View style={styles.heroOverlay}>
+            <View style={styles.avatarRing}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{initialsFor(student.name)}</Text>
+              </View>
+            </View>
+            <AppText variant="h1" style={styles.nameText}>
+              {student.name}
+            </AppText>
+            <View style={styles.messBadge}>
+              <AppText style={styles.messBadgeText}>Mess No. {student.messNumber}</AppText>
             </View>
           </View>
-          <AppText variant="h1" style={styles.nameText}>
-            {student.name}
-          </AppText>
-          <View style={styles.messBadge}>
-            <AppText style={styles.messBadgeText}>Mess No. {student.messNumber}</AppText>
-          </View>
-        </View>
-        {/* dissolve into transparency */}
+        </ImageBackground>
+        {/* dissolve into transparency — 7 steps for a smooth ramp */}
         <View style={styles.fadeA} />
         <View style={styles.fadeB} />
         <View style={styles.fadeC} />
+        <View style={styles.fadeD} />
+        <View style={styles.fadeE} />
+        <View style={styles.fadeF} />
+        <View style={styles.fadeG} />
       </View>
 
       {/* Quick stats — two friendly tiles instead of a table */}
@@ -118,23 +130,25 @@ const styles = StyleSheet.create({
     marginHorizontal: -spacing.xl,
   },
   heroSolid: {
+    backgroundColor: colors.dark, // visible while the image loads / if it fails
+  },
+  heroImage: {
+    resizeMode: 'cover',
+  },
+  heroOverlay: {
+    backgroundColor: 'rgba(14,11,19,0.72)', // espresso dim so text always wins
     alignItems: 'center',
-    backgroundColor: colors.dark,
     paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
   },
-  fadeA: {
-    height: 14,
-    backgroundColor: 'rgba(14,11,19,0.5)',
-  },
-  fadeB: {
-    height: 10,
-    backgroundColor: 'rgba(14,11,19,0.22)',
-  },
-  fadeC: {
-    height: 7,
-    backgroundColor: 'rgba(14,11,19,0.08)',
-  },
+  fadeA: { height: 12, backgroundColor: 'rgba(14,11,19,0.62)' },
+  fadeB: { height: 11, backgroundColor: 'rgba(14,11,19,0.5)' },
+  fadeC: { height: 10, backgroundColor: 'rgba(14,11,19,0.38)' },
+  fadeD: { height: 9, backgroundColor: 'rgba(14,11,19,0.27)' },
+  fadeE: { height: 8, backgroundColor: 'rgba(14,11,19,0.18)' },
+  fadeF: { height: 7, backgroundColor: 'rgba(14,11,19,0.1)' },
+  fadeG: { height: 6, backgroundColor: 'rgba(14,11,19,0.04)' },
   avatarRing: {
     padding: 4,
     borderRadius: radii.pill,
