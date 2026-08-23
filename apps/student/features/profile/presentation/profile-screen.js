@@ -1,4 +1,11 @@
-import { ActivityIndicator, ImageBackground, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,6 +15,12 @@ import StreakCard from '../../streak/presentation/streak-card';
 import { AppText, Screen } from '@/shared/ui';
 import { DoodleSparkles } from '@/shared/ui/doodles/Doodles';
 import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
+
+// 22 micro-strips from overlay opacity down to zero — a gradient without
+// expo-linear-gradient (native module not present in the current dev build)
+const FADE = Array.from({ length: 22 }, (_, i) =>
+  Number((0.62 * (1 - i / 21)).toFixed(3))
+);
 
 export default function ProfileScreen() {
   const { loading, student } = useProfile();
@@ -27,24 +40,41 @@ export default function ProfileScreen() {
     <Screen style={styles.screen}>
       {/*
         Hero: a full-bleed cover IMAGE pinned to the very top of the screen
-        (negative margin cancels the safe-area pad), dimmed by an espresso
-        overlay so the identity stays readable, then dissolving into the warm
-        page via graduated opacity strips.
+        (negative margin cancels the safe-area pad), dimmed edge-to-edge by an
+        espresso overlay so the identity stays readable, then dissolving into
+        the warm page via a generated micro-strip gradient (22 slices — reads
+        as one continuous fade, no native gradient module needed).
 
         PLACEHOLDER: swap the require() below for the student's cover photo
-        once the backend serves one — layout won't need to change.
+        once the backend serves one. The two edit buttons are visual until
+        upload exists.
       */}
       <View style={[styles.heroWrap, { marginTop: -insets.top }]}>
         <ImageBackground
           source={require('@/assets/images/icon.png')}
-          style={[styles.heroSolid, { paddingTop: insets.top + spacing.lg }]}
+          style={styles.heroSolid}
           imageStyle={styles.heroImage}>
-          <View style={styles.heroOverlay}>
-            <View style={styles.avatarRing}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{initialsFor(student.name)}</Text>
+          <View style={[styles.heroOverlay, { paddingTop: insets.top + spacing.lg }]}>
+            {/* banner edit — replaces the whole cover photo */}
+            <Pressable
+              onPress={() => {}}
+              hitSlop={8}
+              style={[styles.editBtn, { top: insets.top + spacing.sm }]}>
+              <MaterialCommunityIcons name="image-edit" size={15} color={colors.textLight} />
+            </Pressable>
+
+            <View style={styles.avatarWrap}>
+              <View style={styles.avatarRing}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{initialsFor(student.name)}</Text>
+                </View>
               </View>
+              {/* avatar edit */}
+              <Pressable onPress={() => {}} hitSlop={8} style={styles.avatarEditBtn}>
+                <MaterialCommunityIcons name="camera" size={13} color={colors.textDark} />
+              </Pressable>
             </View>
+
             <AppText variant="h1" style={styles.nameText}>
               {student.name}
             </AppText>
@@ -53,14 +83,10 @@ export default function ProfileScreen() {
             </View>
           </View>
         </ImageBackground>
-        {/* dissolve into transparency — 7 steps for a smooth ramp */}
-        <View style={styles.fadeA} />
-        <View style={styles.fadeB} />
-        <View style={styles.fadeC} />
-        <View style={styles.fadeD} />
-        <View style={styles.fadeE} />
-        <View style={styles.fadeF} />
-        <View style={styles.fadeG} />
+        {/* dissolve into transparency — 22 micro-strips = smooth ramp */}
+        {FADE.map((opacity, i) => (
+          <View key={i} style={{ height: 3, backgroundColor: `rgba(14,11,19,${opacity})` }} />
+        ))}
       </View>
 
       {/* Quick stats — two friendly tiles instead of a table */}
@@ -96,8 +122,7 @@ export default function ProfileScreen() {
   );
 }
 
-function StatTile({ icon, tint, soft, label, children }) {
-  return (
+function StatTile({ icon, tint, soft, label, children }) {  return (
     <View style={styles.statTile}>
       <View style={[styles.statIcon, { backgroundColor: soft }]}>
         <MaterialCommunityIcons name={icon} size={22} color={tint} />
@@ -135,20 +160,28 @@ const styles = StyleSheet.create({
   heroImage: {
     resizeMode: 'cover',
   },
+  // covers the ENTIRE image area — including behind the status bar
   heroOverlay: {
-    backgroundColor: 'rgba(14,11,19,0.72)', // espresso dim so text always wins
+    backgroundColor: 'rgba(14,11,19,0.72)',
     alignItems: 'center',
     paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
   },
-  fadeA: { height: 12, backgroundColor: 'rgba(14,11,19,0.62)' },
-  fadeB: { height: 11, backgroundColor: 'rgba(14,11,19,0.5)' },
-  fadeC: { height: 10, backgroundColor: 'rgba(14,11,19,0.38)' },
-  fadeD: { height: 9, backgroundColor: 'rgba(14,11,19,0.27)' },
-  fadeE: { height: 8, backgroundColor: 'rgba(14,11,19,0.18)' },
-  fadeF: { height: 7, backgroundColor: 'rgba(14,11,19,0.1)' },
-  fadeG: { height: 6, backgroundColor: 'rgba(14,11,19,0.04)' },
+  editBtn: {
+    position: 'absolute',
+    right: spacing.md,
+    width: 32,
+    height: 32,
+    borderRadius: radii.pill,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarWrap: {
+    position: 'relative', // anchor for the camera button
+  },
   avatarRing: {
     padding: 4,
     borderRadius: radii.pill,
@@ -167,6 +200,19 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
     fontSize: 30,
     color: colors.accentPressed,
+  },
+  avatarEditBtn: {
+    position: 'absolute',
+    right: -4,
+    bottom: -2,
+    width: 28,
+    height: 28,
+    borderRadius: radii.pill,
+    backgroundColor: colors.accent, // amber — matches the badge language
+    borderWidth: 2.5,
+    borderColor: 'rgba(14,11,19,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   nameText: {
     color: colors.textLight,
