@@ -7,10 +7,12 @@ import CrowdCard from './crowd-card';
 import CrowdFeedbackPrompt from './crowd-feedback-prompt';
 import HeaderDoodles from './header-doodles';
 import { useCrowdStatus } from './use-crowd-status';
+import TodayFoodCard from '../../menu/presentation/today-food-card';
+import { useStreak } from '../../streak/presentation/use-streak';
 import * as crowdRepository from '../data/mock-crowd-repository';
 import { useProfile } from '../../profile/presentation/use-profile';
 import { AppText } from '@/shared/ui';
-import { DoodleBowl } from '@/shared/ui/doodles/Doodles';
+import { DoodleBowl, DoodleFlame } from '@/shared/ui/doodles/Doodles';
 import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 import { SHOW_SIMULATION_TOOLS } from '@/shared/lib/config';
 
@@ -25,6 +27,7 @@ function greetingFor(hour) {
 export default function HomeScreen() {
   const snap = useCrowdStatus();
   const { student } = useProfile();
+  const { streak } = useStreak();
   const [promptClosed, setPromptClosed] = useState(false);
   const [devOpen, setDevOpen] = useState(false);
 
@@ -47,8 +50,16 @@ export default function HomeScreen() {
             <AppText style={styles.userName} numberOfLines={1}>
               {student?.name ?? '…'}
             </AppText>
-            <View style={styles.messChip}>
-              <AppText style={styles.messChipText}>Mess No. {student?.messNumber ?? '—'}</AppText>
+            <View style={styles.badgeRow}>
+              <View style={styles.messChip}>
+                <AppText style={styles.messChipText}>Mess No. {student?.messNumber ?? '—'}</AppText>
+              </View>
+              {streak > 0 && (
+                <View style={styles.streakChip}>
+                  <DoodleFlame size={15} color="#FFC96B" strokeWidth={3} />
+                  <AppText style={styles.streakChipText}>{streak}</AppText>
+                </View>
+              )}
             </View>
           </View>
           <Image source={MASCOT} style={styles.mascot} resizeMode="contain" />
@@ -67,6 +78,8 @@ export default function HomeScreen() {
         </View>
 
         <CrowdCard status={snap.status} />
+
+        <TodayFoodCard />
 
         {snap.canSubmitFeedback && !snap.feedbackPending && promptClosed && (
           <PressableChip label="Answer the crowd check-in" onPress={() => setPromptClosed(false)} />
@@ -162,6 +175,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
     marginTop: 4,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   messChip: {
     alignSelf: 'flex-start',
     marginTop: spacing.md,
@@ -174,6 +192,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts.bold,
     color: '#17141A', // dark ink on amber for max contrast
+  },
+  streakChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,157,0,0.18)',
+    borderRadius: radii.pill,
+    paddingVertical: 7,
+    paddingHorizontal: spacing.md,
+  },
+  streakChipText: {
+    fontSize: 13,
+    fontFamily: fonts.bold,
+    color: '#FFC96B',
   },
   mascot: {
     width: 152,
