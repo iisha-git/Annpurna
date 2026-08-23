@@ -6,15 +6,17 @@ import {
   DoodleBroccoli,
   DoodleCarrot,
   DoodleCherries,
+  DoodleChili,
+  DoodleFries,
   DoodleLeaf,
+  DoodleMushroom,
   DoodleSparkles,
 } from '@/shared/ui/doodles/Doodles';
 
 /**
- * Animated food-doodle scatter across the ENTIRE dark header:
- * veggies & fruits drifting gently + one breathing halo behind the
- * mascot zone. Rendered as the first child of the header so all real
- * content paints on top. Pure JS Animated — no native deps.
+ * Animated food-doodle scatter across the ENTIRE dark header.
+ * Rendered as the first child of the header so all real content
+ * paints on top. Pure JS Animated — no native deps.
  */
 
 function FloatingDoodle({ style, dur = 3400, delay = 0, range = 6, opacity = 0.6, wobble = 0, children }) {
@@ -51,58 +53,57 @@ function FloatingDoodle({ style, dur = 3400, delay = 0, range = 6, opacity = 0.6
 }
 
 export default function HeaderDoodles() {
-  const halo = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(halo, { toValue: 1, duration: 2600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(halo, { toValue: 0, duration: 2600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ]),
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [halo]);
-
   return (
     <>
-      {/* breathing halo behind the mascot zone */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.halo,
-          {
-            opacity: halo.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] }),
-            transform: [{ scale: halo.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.12] }) }],
-          },
-        ]}
-      />
-
       {/* top band */}
-      <FloatingDoodle style={{ left: '46%', top: 10 }} opacity={0.55} dur={3800} wobble={6}>
-        <DoodleLeaf size={26} />
-      </FloatingDoodle>
       <FloatingDoodle style={{ right: 150, top: 16 }} opacity={0.8} dur={3000} range={5}>
         <DoodleSparkles size={26} color="#FFD08A" strokeWidth={3} />
       </FloatingDoodle>
+      <FloatingDoodle style={{ left: '30%', top: 6 }} opacity={0.5} dur={3900} wobble={5}>
+        <DoodleMushroom size={26} />
+      </FloatingDoodle>
+      <FloatingDoodle style={{ right: 70, top: 8 }} opacity={0.6} dur={3600} delay={500} wobble={-6}>
+        <DoodleChili size={28} />
+      </FloatingDoodle>
+      <FloatingDoodle style={{ left: '12%', top: 14 }} opacity={0.45} dur={4400} delay={1100}>
+        <DoodleLeaf size={20} />
+      </FloatingDoodle>
 
       {/* middle band */}
-      <FloatingDoodle style={{ right: 104, top: 58 }} opacity={0.65} dur={3600} delay={400} wobble={-7}>
+      <FloatingDoodle style={{ right: 208, top: 46 }} opacity={0.6} dur={4200} delay={900} wobble={5}>
+        <DoodleApple size={30} />
+      </FloatingDoodle>
+      <FloatingDoodle style={{ right: 104, top: 60 }} opacity={0.65} dur={3600} delay={400} wobble={7}>
         <DoodleCarrot size={38} />
       </FloatingDoodle>
-      <FloatingDoodle style={{ right: 208, top: 44 }} opacity={0.6} dur={4200} delay={900} wobble={5}>
-        <DoodleApple size={30} />
+      <FloatingDoodle style={{ left: '52%', top: 66 }} opacity={0.55} dur={4000} delay={1400} wobble={-4}>
+        <DoodleFries size={28} />
+      </FloatingDoodle>
+      <FloatingDoodle style={{ left: '37%', top: 34 }} opacity={0.45} dur={3300} delay={700} range={7}>
+        <DoodleCherries size={20} color="#F2A09B" />
+      </FloatingDoodle>
+      <FloatingDoodle style={{ left: -8, top: '52%' }} opacity={0.5} dur={3800} delay={200} wobble={6}>
+        <DoodleBroccoli size={30} />
       </FloatingDoodle>
 
       {/* bottom band */}
-      <FloatingDoodle style={{ right: 168, bottom: 4 }} opacity={0.6} dur={3400} delay={1300} wobble={6}>
+      <FloatingDoodle style={{ right: 168, bottom: 2 }} opacity={0.6} dur={3400} delay={1300} wobble={6}>
         <DoodleCherries size={30} />
       </FloatingDoodle>
-      <FloatingDoodle style={{ left: 18, bottom: 12 }} opacity={0.55} dur={4000} delay={600} wobble={-5}>
+      <FloatingDoodle style={{ left: 18, bottom: 10 }} opacity={0.55} dur={4000} delay={600} wobble={-5}>
         <DoodleBroccoli size={32} />
       </FloatingDoodle>
-      <FloatingDoodle style={{ left: '62%', bottom: 22 }} opacity={0.45} dur={3200} delay={1600} range={8}>
-        <DoodleLeaf size={20} color="#C9E3B4" />
+      <FloatingDoodle style={{ left: '62%', bottom: 20 }} opacity={0.45} dur={3200} delay={1600} range={8}>
+        <DoodleLeaf size={18} color="#C9E3B4" />
+      </FloatingDoodle>
+      <FloatingDoodle style={{ left: '10%', bottom: 42 }} opacity={0.5} dur={3700} delay={1000} wobble={-6}>
+        <DoodleApple size={22} color="#F2A09B" />
+      </FloatingDoodle>
+      <FloatingDoodle style={{ left: '44%', bottom: 4 }} opacity={0.5} dur={3500} delay={1800} wobble={4}>
+        <DoodleMushroom size={20} color="#C9B6E8" />
+      </FloatingDoodle>
+      <FloatingDoodle style={{ right: 250, top: 24 }} opacity={0.55} dur={3100} delay={1200} range={7}>
+        <DoodleFries size={22} />
       </FloatingDoodle>
     </>
   );
@@ -111,14 +112,5 @@ export default function HeaderDoodles() {
 const styles = StyleSheet.create({
   item: {
     position: 'absolute',
-  },
-  halo: {
-    position: 'absolute',
-    right: 14,
-    top: 14,
-    width: 124,
-    height: 124,
-    borderRadius: 62,
-    backgroundColor: 'rgba(255,157,0,0.13)',
   },
 });

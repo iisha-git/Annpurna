@@ -140,3 +140,45 @@ export function DoodleCherries({ size = 24, color = '#F2A09B', strokeWidth = 2.4
     </Svg>
   );
 }
+
+export function DoodleMushroom({ size = 24, color = '#B79BE0', strokeWidth = 2.4 }) {
+  const s = strokeProps(color, strokeWidth);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 48 48">
+      {/* cap */}
+      <Path d="M9 21.5C9 13.8 15.5 8.5 24 8.5S39 13.8 39 21.5c0 1.8-1.3 2.7-3.1 2.7H12.1c-1.8 0-3.1-.9-3.1-2.7z" {...s} />
+      {/* stem */}
+      <Path d="M19.5 25l1.3 11.5c.2 2 1.6 3.5 3.2 3.5s3-1.5 3.2-3.5L28.5 25" {...s} />
+      {/* cap dots */}
+      <Path d="M17 15.5h.01" {...s} />
+      <Path d="M25 12.5h.01" {...s} />
+      <Path d="M31.5 16.5h.01" {...s} />
+    </Svg>
+  );
+}
+
+export function DoodleChili({ size = 24, color = '#E86A5A', strokeWidth = 2.4 }) {
+  const s = strokeProps(color, strokeWidth);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 48 48">
+      {/* curvy body */}
+      <Path d="M33 15c2.5 7 .5 15.5-6.5 21-4.5 3.5-10.5 5-14 2.5-1-.8-.8-2.2.4-2.7 7.6-3 13.1-8.8 15.6-16.3" {...s} />
+      {/* stem */}
+      <Path d="M33 15c.3-2.5 2-4 4.5-4-.3 2.5-2 4-4.5 4z" {...s} />
+    </Svg>
+  );
+}
+
+export function DoodleFries({ size = 24, color = '#F2CE6B', strokeWidth = 2.4 }) {
+  const s = strokeProps(color, strokeWidth);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 48 48">
+      {/* sticks poking out */}
+      <Path d="M19 26v-9" {...s} />
+      <Path d="M24 26V14" {...s} />
+      <Path d="M29 26v-10" {...s} />
+      {/* box */}
+      <Path d="M15 27h18l-2 14a2.5 2.5 0 0 1-2.5 2h-9A2.5 2.5 0 0 1 17 41l-2-14z" {...s} />
+    </Svg>
+  );
+}
