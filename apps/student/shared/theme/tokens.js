@@ -11,8 +11,9 @@ export const colors = {
   border: '#EFE3D7',
 
   // Dark theme surfaces (headers, floating navbar)
-  dark: '#2B2118', // deep espresso
-  onDarkMuted: '#C9B6A4', // secondary text on dark
+  // Modern charcoal-navy — sits between black and dark navy
+  dark: '#1D2430',
+  onDarkMuted: '#A7B0C0', // secondary text on dark
   accentOnDark: '#FF8A50', // brighter accent for dark backgrounds
 
   // Text

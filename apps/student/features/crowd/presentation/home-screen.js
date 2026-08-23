@@ -137,8 +137,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl + 4,
   },
   headerLeft: {
     flex: 1,
@@ -150,10 +150,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   userName: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
     color: '#FFFFFF',
-    marginTop: 2,
+    marginTop: 4,
   },
   messChip: {
     alignSelf: 'flex-start',
@@ -169,8 +169,8 @@ const styles = StyleSheet.create({
     color: '#F1E4D6',
   },
   mascot: {
-    width: 92,
-    height: 92,
+    width: 112,
+    height: 112,
   },
   reopenChip: {
     alignSelf: 'flex-start',
