@@ -204,15 +204,13 @@ const styles = StyleSheet.create({
   },
   // vertically-flipped punch: concave sliver now hugs the TOP edge,
   // curving down-and-outward from the bubble's equator
-  // Elliptical punch: tight horizontal radius, stretched vertically so the
-  // concave sliver runs long along the bubble's side
   filletCutL: {
     position: 'absolute',
-    left: -10,
-    bottom: -14,
-    width: 20,
-    height: 28,
-    borderRadius: 10,
+    left: -11.5,
+    bottom: -11.5,
+    width: 23,
+    height: 23,
+    borderRadius: 11.5,
     backgroundColor: colors.dark,
   },
   filletR: {
@@ -226,11 +224,11 @@ const styles = StyleSheet.create({
   },
   filletCutR: {
     position: 'absolute',
-    right: -10,
-    bottom: -14,
-    width: 20,
-    height: 28,
-    borderRadius: 10,
+    right: -11.5,
+    bottom: -11.5,
+    width: 23,
+    height: 23,
+    borderRadius: 11.5,
     backgroundColor: colors.dark,
   },
 });
