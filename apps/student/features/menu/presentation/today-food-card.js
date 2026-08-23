@@ -6,7 +6,7 @@ import { useWeeklyMenu } from './use-weekly-menu';
 import { MEAL_LABELS, weekdayKeyFor } from '../domain/menu-model';
 import { formatStartsIn, mealMomentFor } from '../domain/meal-schedule';
 import { DoodleFries } from '@/shared/ui/doodles/Doodles';
-import { AppText, Card } from '@/shared/ui';
+import { AppText } from '@/shared/ui';
 import { colors, radii, spacing } from '@/shared/theme/tokens';
 
 const MAX_CHIPS = 4;
@@ -18,7 +18,9 @@ const DAY_NAMES = {
 
 /**
  * Home's "what's cooking" card: next meal + today's dishes.
- * Whole card is pressable → jumps to the Menu tab for the full week.
+ * DELIBERATELY softer than the crowd hero card — tinted, flat, no
+ * elevation. The crowd card is Annpurna's main character; everything
+ * else on Home plays supporting roles.
  */
 export default function TodayFoodCard() {
   const router = useRouter();
@@ -37,10 +39,10 @@ export default function TodayFoodCard() {
     <Pressable
       onPress={() => router.push('/menu')}
       style={({ pressed }) => [{ marginTop: spacing.md }, pressed && { transform: [{ scale: 0.985 }] }]}>
-      <Card style={styles.card}>
+      <View style={styles.softCard}>
         <View style={styles.headerRow}>
           <View style={styles.titleRow}>
-            <DoodleFries size={22} />
+            <DoodleFries size={22} color={colors.accentPressed} />
             <AppText variant="title">Today's food</AppText>
           </View>
           <AppText variant="caption">{DAY_NAMES[dayKey]}</AppText>
@@ -51,7 +53,7 @@ export default function TodayFoodCard() {
           <AppText style={styles.stripMain}>
             {moment.status === 'SERVING' ? MEAL_LABELS[moment.slot] : `Next: ${MEAL_LABELS[moment.slot]}`}
           </AppText>
-          <AppText variant="caption">
+          <AppText variant="caption" style={{ color: colors.accentPressed }}>
             {focusMeal ? `${focusMeal.time} · ` : ''}
             {moment.status === 'SERVING' ? 'serving now' : formatStartsIn(moment.minutesUntil)}
           </AppText>
@@ -68,19 +70,22 @@ export default function TodayFoodCard() {
             ))}
             {extra > 0 && (
               <View style={[styles.chip, styles.moreChip]}>
-                <Text style={[styles.chipText, { color: colors.accentPressed }]}>+{extra} more</Text>
+                <Text style={[styles.chipText, { color: colors.textMuted }]}>+{extra} more</Text>
               </View>
             )}
           </View>
         )}
-      </Card>
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    paddingVertical: spacing.lg,
+  // Tinted + flat — visually a step DOWN from the white hero card
+  softCard: {
+    backgroundColor: colors.accentSoft,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
   },
   headerRow: {
     flexDirection: 'row',
@@ -109,7 +114,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   chip: {
-    backgroundColor: colors.accentSoft,
+    backgroundColor: colors.surface,
     borderRadius: radii.pill,
     paddingVertical: 6,
     paddingHorizontal: spacing.md,
@@ -117,7 +122,7 @@ const styles = StyleSheet.create({
   moreChip: {
     backgroundColor: 'transparent',
     borderWidth: 1.2,
-    borderColor: colors.accent,
+    borderColor: colors.border,
   },
   chipText: {
     fontSize: 12.5,
@@ -125,3 +130,4 @@ const styles = StyleSheet.create({
     color: colors.accentPressed,
   },
 });
+

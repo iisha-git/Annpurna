@@ -54,12 +54,20 @@ export default function HomeScreen() {
               <View style={styles.messChip}>
                 <AppText style={styles.messChipText}>Mess No. {student?.messNumber ?? '—'}</AppText>
               </View>
-              {streak > 0 && (
-                <View style={styles.streakChip}>
-                  <DoodleFlame size={15} color="#FFC96B" strokeWidth={3} />
-                  <AppText style={styles.streakChipText}>{streak}</AppText>
-                </View>
-              )}
+              <View
+                style={[
+                  styles.streakChip,
+                  streak === 0 && styles.streakChipEmpty,
+                ]}>
+                <DoodleFlame
+                  size={15}
+                  color={streak > 0 ? '#FFC96B' : 'rgba(255,246,232,0.35)'}
+                  strokeWidth={3}
+                />
+                <AppText style={[styles.streakChipText, streak === 0 && styles.streakChipTextEmpty]}>
+                  {streak}
+                </AppText>
+              </View>
             </View>
           </View>
           <Image source={MASCOT} style={styles.mascot} resizeMode="contain" />
@@ -202,10 +210,16 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     paddingHorizontal: spacing.md,
   },
+  streakChipEmpty: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
+  },
   streakChipText: {
     fontSize: 13,
     fontFamily: fonts.bold,
     color: '#FFC96B',
+  },
+  streakChipTextEmpty: {
+    color: 'rgba(255,246,232,0.4)',
   },
   mascot: {
     width: 152,
