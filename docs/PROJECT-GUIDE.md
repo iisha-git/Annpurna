@@ -55,7 +55,11 @@ Annpurna/                      ← git repo root
     │       └── presentation/
     │           ├── use-monthly-status.js   ← hook that reloads when month changes
     │           └── mess-status-screen.js   ← the calendar UI
-    │   └── profile | streak   (skeletons for now)
+    │   ├── profile/            ← Step 4: student identity (view-only)
+    │   │   ├── domain/profile-model.js     ← Student type + mess-number rule
+    │   │   ├── data/profile-repository.js  ← mock "signed-in" student
+    │   │   └── presentation/               ← use-profile.js + profile-screen.js
+    │   └── streak             (skeleton for now)
     ├── assets/images/         ← app icon, splash screen images
     ├── app.json               ← app identity: name, icon, splash colors
     ├── package.json           ← dependencies + scripts
@@ -214,3 +218,4 @@ Install **Expo Go** on your phone → scan QR → instant live testing.
 - **Setup** — EAS linked (`eas init`), dev build configured and installed on phone; `expo-dev-client` replaces Expo Go.
 - **Step 2** — Menu feature end-to-end: domain model, mock repository (simulated latency), custom hook, day-chip selector UI, route-wrapper pattern.
 - **Step 3** — Monthly Mess Status calendar: month navigation (clamped to today), 7-column dot grid, green=present / red=approved leave, future days blank. Mock leaves hardcoded per month.
+- **Step 4** — Profile screen: initials avatar, owner-assigned mess number badge (`/^\d{2,3}$/` rule lives in domain), detail rows. Reinforces: students never edit mess data.
