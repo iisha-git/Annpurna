@@ -124,6 +124,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        contentStyle: { backgroundColor: colors.background }, // canvas behind every tab — must match the droplet's "hole"
         tabBarActiveTintColor: colors.accentOnDark,
         tabBarInactiveTintColor: 'rgba(251,247,242,0.55)',
         tabBarStyle: {

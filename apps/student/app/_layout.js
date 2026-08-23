@@ -10,6 +10,8 @@ import {
   Nunito_800ExtraBold,
 } from '@expo-google-fonts/nunito';
 
+import { colors } from '@/shared/theme/tokens';
+
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
@@ -18,6 +20,10 @@ export const unstable_settings = {
 
 // Annpurna is a light, warm UI — we pin the navigation theme instead of
 // following the system dark mode until a dark palette exists.
+const navTheme = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, background: colors.background },
+};
 export default function RootLayout() {
   // Fonts load JS-side at startup — no dev-build rebuild needed.
   const [fontsLoaded] = useFonts({
@@ -31,9 +37,14 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <ThemeProvider value={DefaultTheme}>
+    <ThemeProvider value={navTheme}>
       <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" options={{ headerShown: true }} />
       </Stack>
