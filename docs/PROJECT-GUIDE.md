@@ -49,7 +49,13 @@ Annpurna/                      ← git repo root
     │       └── presentation/
     │           ├── menu-screen.js          ← the actual UI
     │           └── use-weekly-menu.js      ← custom hook that loads the data
-    │   └── mess-status | profile | streak   (skeletons for now)
+    │   ├── mess-status/        ← Step 3: monthly calendar (green/red dots)
+    │       ├── domain/mess-status-model.js  ← calendar math (days, blanks, future check)
+    │       ├── data/mess-status-repository.js ← mock attendance/leave records
+    │       └── presentation/
+    │           ├── use-monthly-status.js   ← hook that reloads when month changes
+    │           └── mess-status-screen.js   ← the calendar UI
+    │   └── profile | streak   (skeletons for now)
     ├── assets/images/         ← app icon, splash screen images
     ├── app.json               ← app identity: name, icon, splash colors
     ├── package.json           ← dependencies + scripts
@@ -158,8 +164,14 @@ real screens live in their feature folder. Keeps navigation separate from logic.
 | **ActivityIndicator** | Built-in spinner for loading states | MenuScreen loading branch |
 | **ScrollView horizontal** | Horizontally scrollable row (day chips) | MenuScreen |
 | **key prop** | Unique id for each item in a rendered list — React needs it to track items | `key={meal.slot}` |
+| **Dependency array** | `[year, month]` in useEffect = "re-run only when these change" | `useMonthlyStatus` |
+| **Conditional rendering** | `condition ? <A/> : <B/>` picks what renders; `undefined` status renders nothing | DayCell dots |
 
 RN core components replace web tags: `<View>`≈div, `<Text>`≈p (all text MUST be inside Text), `<Pressable>`≈button.
+
+**Layout trick used in the calendar:** a 7-column grid without any table component —
+a row-wrapping container (`flexWrap`) where each cell takes exactly `width: 100/7 %`.
+Leading blank cells push day 1 onto the correct weekday. Pure math, no library.
 
 ---
 
@@ -201,3 +213,4 @@ Install **Expo Go** on your phone → scan QR → instant live testing.
 - **Step 1** — Scaffolded Expo app, design system, tab shell, crowd domain model. First push to GitHub.
 - **Setup** — EAS linked (`eas init`), dev build configured and installed on phone; `expo-dev-client` replaces Expo Go.
 - **Step 2** — Menu feature end-to-end: domain model, mock repository (simulated latency), custom hook, day-chip selector UI, route-wrapper pattern.
+- **Step 3** — Monthly Mess Status calendar: month navigation (clamped to today), 7-column dot grid, green=present / red=approved leave, future days blank. Mock leaves hardcoded per month.
