@@ -137,8 +137,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl + 4,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl + 8,
   },
   headerLeft: {
     flex: 1,
@@ -169,8 +169,8 @@ const styles = StyleSheet.create({
     color: '#F1E4D6',
   },
   mascot: {
-    width: 112,
-    height: 112,
+    width: 124,
+    height: 124,
   },
   reopenChip: {
     alignSelf: 'flex-start',
