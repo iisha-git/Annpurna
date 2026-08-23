@@ -26,10 +26,10 @@ export default function StreakCard() {
   return (
     <Card style={styles.card}>
       <View style={styles.flameWrap}>
-        <DoodleFlame size={32} color={flameColor} />
+        <DoodleFlame size={26} color={flameColor} />
       </View>
       <View style={{ flex: 1 }}>
-        <AppText variant="h1" style={styles.count}>
+        <AppText style={styles.count}>
           {streak}
           <AppText style={styles.unit}> day{streak === 1 ? '' : 's'}</AppText>
         </AppText>
@@ -45,26 +45,30 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    marginTop: spacing.md, // breathing room under the stat tiles
+    paddingVertical: spacing.sm, // thin row, matches the stat tiles
   },
   flameWrap: {
-    width: 56,
-    height: 56,
+    width: 40,
+    height: 40,
     borderRadius: radii.pill,
     backgroundColor: colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.lg,
+    marginRight: spacing.md,
   },
   count: {
-    lineHeight: 32,
+    fontFamily: fonts.display,
+    fontSize: 18,
+    color: colors.text,
+    lineHeight: 22,
   },
   unit: {
-    fontFamily: fonts.displayRegular,
-    fontSize: 15,
+    fontFamily: fonts.body,
+    fontSize: 12.5,
     color: colors.textMuted,
   },
   caption: {
-    marginTop: 2,
+    marginTop: 1,
   },
 });
