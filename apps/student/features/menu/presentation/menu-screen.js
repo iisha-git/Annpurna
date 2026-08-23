@@ -21,7 +21,9 @@ export default function MenuScreen() {
   const dayMenu = week ? week[selectedDay] : null;
 
   return (
-    <Screen>
+    // Bottom padding = dock height + breathing room — content must never
+    // slide behind the dock, or its cream droplet pops over a white card
+    <Screen style={styles.screen}>
       <AppText variant="h1">Menu</AppText>
       <AppText variant="caption">What's cooking this week</AppText>
 
@@ -53,9 +55,9 @@ export default function MenuScreen() {
           <AppText>Couldn't load the menu. Pull to retry later.</AppText>
         </Card>
       ) : (
-        <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
+        <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
           {dayMenu.meals.map((meal) => (
-            <Card key={meal.slot}>
+            <Card key={meal.slot} style={styles.mealCard}>
               <View style={styles.mealHeader}>
                 <Ionicons name={MEAL_ICONS[meal.slot]} size={20} color={colors.accent} />
                 <AppText variant="title" style={{ marginLeft: spacing.sm }}>
@@ -65,13 +67,9 @@ export default function MenuScreen() {
                   {meal.time}
                 </AppText>
               </View>
-              <View style={{ marginTop: spacing.sm, gap: spacing.xs }}>
-                {meal.items.map((item) => (
-                  <AppText key={item} color={colors.text}>
-                    •  {item}
-                  </AppText>
-                ))}
-              </View>
+              <AppText variant="caption" numberOfLines={2} style={styles.mealItems}>
+                {meal.items.join('   ·   ')}
+              </AppText>
             </Card>
           ))}
         </View>
@@ -81,6 +79,9 @@ export default function MenuScreen() {
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    paddingBottom: 90, // dock clearance — keeps the droplet's "hole" clean
+  },
   chipRow: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -109,5 +110,12 @@ const styles = StyleSheet.create({
   mealHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  mealCard: {
+    paddingVertical: spacing.md, // thinner than default — all four meals stay above the dock
+  },
+  mealItems: {
+    marginTop: spacing.xs,
+    color: colors.textMuted,
   },
 });
