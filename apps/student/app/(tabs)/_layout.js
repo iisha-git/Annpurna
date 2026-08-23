@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   },
   filletL: {
     position: 'absolute',
-    left: (DROP_W - CIRCLE) / 2 - FILLET + 2, // just a hair from the bubble's edge
+    left: (DROP_W - CIRCLE) / 2 - FILLET + 0.5, // tucked tighter to the bubble
     top: DROP_H / 2 - 2.5,
     width: FILLET,
     height: FILLET,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   filletR: {
     position: 'absolute',
-    right: (DROP_W - CIRCLE) / 2 - FILLET + 2,
+    right: (DROP_W - CIRCLE) / 2 - FILLET + 0.5,
     top: DROP_H / 2 - 2.5,
     width: FILLET,
     height: FILLET,
