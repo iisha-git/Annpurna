@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/nunito';
 
 import { colors } from '@/shared/theme/tokens';
+import { AuthProvider } from '@/features/auth/presentation/use-auth-session';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -38,16 +39,19 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={navTheme}>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="+not-found" options={{ headerShown: true }} />
-      </Stack>
+      <AuthProvider>
+        <StatusBar style="dark" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="login" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="+not-found" options={{ headerShown: true }} />
+        </Stack>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

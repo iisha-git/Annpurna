@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -20,6 +20,15 @@ export default function MessStatusScreen() {
 
   const atCurrentMonth =
     viewed.year === now.getFullYear() && viewed.month === now.getMonth();
+
+  // Month-at-a-glance numbers, recomputed whenever a month's data lands
+  const stats = useMemo(() => {
+    const values = Object.values(statuses);
+    const present = values.filter((s) => s === 'PRESENT').length;
+    const leaves = values.filter((s) => s === 'APPROVED_LEAVE').length;
+    const rate = values.length ? Math.round((present / values.length) * 100) : 0;
+    return { present, leaves, rate };
+  }, [statuses]);
 
   const goPrev = () =>
     setViewed(({ year, month }) =>
@@ -108,6 +117,26 @@ export default function MessStatusScreen() {
           </View>
         )}
       </Card>
+
+      {/* Month-at-a-glance — the three numbers you actually care about */}
+      {!loading && (
+        <View style={styles.statsRow}>
+          <View style={styles.statTile}>
+            <Text style={[styles.statValue, { color: colors.success }]}>{stats.present}</Text>
+            <AppText variant="caption">Present</AppText>
+          </View>
+          <View style={styles.statTile}>
+            <Text style={[styles.statValue, { color: colors.danger }]}>{stats.leaves}</Text>
+            <AppText variant="caption">Leaves</AppText>
+          </View>
+          <View style={styles.statTile}>
+            <Text style={[styles.statValue, { color: colors.accentPressed }]}>
+              {stats.rate}%
+            </Text>
+            <AppText variant="caption">Attendance</AppText>
+          </View>
+        </View>
+      )}
 
       {/* Legend as soft chips */}
       <View style={styles.legend}>
@@ -213,7 +242,7 @@ const styles = StyleSheet.create({
   weekdayLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.textMuted,
+    color: colors.muted,
   },
   // Status now fills the whole bubble — colour carries the meaning at a glance
   dayBubble: {
@@ -240,9 +269,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   dayText: {
-    fontFamily: fonts.bodyBold,
+    fontFamily: fonts.bold,
     fontSize: 12.5,
-    color: colors.text,
+    color: colors.textDark,
   },
   presentText: {
     color: colors.success,
@@ -251,7 +280,7 @@ const styles = StyleSheet.create({
     color: colors.danger,
   },
   futureDayText: {
-    color: colors.textMuted,
+    color: colors.muted,
     fontFamily: fonts.body,
   },
   dot: {
@@ -275,5 +304,25 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  statTile: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingVertical: spacing.md + 2,
+    gap: 2,
+  },
+  statValue: {
+    fontFamily: fonts.display,
+    fontSize: 24,
   },
 });

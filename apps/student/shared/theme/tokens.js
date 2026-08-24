@@ -24,6 +24,10 @@ export const colors = {
   accentPressed: '#E68900',
   accentSoft: '#FFF0D6',
 
+  // Compatibility aliases — several features reference these names
+  text: '#17141A', // = textDark
+  textMuted: '#8B8380', // = muted
+
   // Semantic
   success: '#3E9C55',
   successSoft: '#E4F3E8',
@@ -60,6 +64,7 @@ export const fonts = {
   body: 'Nunito_400Regular',
   bodySemi: 'Nunito_600SemiBold',
   bold: 'Nunito_700Bold',
+  bodyBold: 'Nunito_700Bold', // compatibility alias = bold
   extra: 'Nunito_800ExtraBold',
 };
 

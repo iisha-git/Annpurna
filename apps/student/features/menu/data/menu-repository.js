@@ -1,13 +1,17 @@
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+
+import { db } from '@/shared/lib/firebase';
 import { MEAL_SLOTS, WEEKDAYS } from '../domain/menu-model';
 
 /**
  * MENU REPOSITORY — the ONLY place the app asks "what's the menu?"
  *
- * Today: a mock that returns hardcoded weekly data after a fake delay,
- * so loading states are realistic during development.
+ * LIVE from Firestore: one document (`menus/current`) holds the whole
+ * week. The owner panel edits it; every open phone updates instantly
+ * through onSnapshot — no pull-to-refresh needed.
  *
- * Tomorrow: swap the internals for real API calls (or Firestore, etc.).
- * The UI and this contract stay untouched — that's the architecture paying off.
+ * If the document doesn't exist yet (fresh project), we fall back to the
+ * built-in week below so the app never shows an empty screen.
  */
 
 const MEAL_TIMES = {
@@ -17,8 +21,8 @@ const MEAL_TIMES = {
   DINNER: '7:30 – 9:00 PM',
 };
 
-/** Weekly mess menu — will come from the owner panel later. */
-const WEEKLY_MENU = {
+/** Seed + offline fallback — the same week the mock used to serve. */
+export const DEFAULT_WEEKLY_MENU = {
   MON: {
     BREAKFAST: ['Poha', 'Boiled Eggs', 'Banana', 'Tea'],
     LUNCH: ['Chapati', 'Dal Tadka', 'Aloo Bhujia', 'Rice', 'Curd'],
@@ -63,31 +67,52 @@ const WEEKLY_MENU = {
   },
 };
 
-function simulateLatency(ms = 600) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+/** Firestore path of the single menu document. */
+export const MENU_DOC_PATH = ['menus', 'current'];
 
-/**
- * Returns the full week: { MON: DayMenu, ... }
- * @returns {Promise<Object<import('../domain/menu-model').Weekday, import('../domain/menu-model').DayMenu>>}
- */
-export async function getWeeklyMenu() {
-  await simulateLatency();
-
+/** Firestore stores {MON:{BREAKFAST:[...],...}} → shape it for the UI contract. */
+function shapeWeek(raw) {
   /** @type {Record<string, any>} */
   const week = {};
   for (const day of WEEKDAYS) {
+    const dayData = raw?.[day];
     week[day] = {
       day,
       meals: MEAL_SLOTS.map((slot) => ({
         slot,
         time: MEAL_TIMES[slot],
-        items: WEEKLY_MENU[day][slot],
+        items: Array.isArray(dayData?.[slot]) ? dayData[slot] : [],
       })),
     };
   }
   return week;
 }
 
-/** Repository object — screens/hooks talk to THIS, never to raw data. */
-export const menuRepository = { getWeeklyMenu };
+function menuRef() {
+  return doc(db, ...MENU_DOC_PATH);
+}
+
+/**
+ * Live subscription — fires immediately with current state, then again on
+ * EVERY owner edit. Returns an unsubscribe function.
+ */
+export function subscribeToWeeklyMenu(onData, onError) {
+  return onSnapshot(
+    menuRef(),
+    (snap) => onData(shapeWeek(snap.exists() ? snap.data() : DEFAULT_WEEKLY_MENU)),
+    (err) => {
+      console.warn('[menu] live read failed:', err.code);
+      if (onError) onError(err);
+      onData(shapeWeek(DEFAULT_WEEKLY_MENU)); // degrade gracefully, never blank
+    }
+  );
+}
+
+/** One-time read (kept for compatibility with anything that prefers a promise). */
+export async function getWeeklyMenu() {
+  const snap = await getDoc(menuRef());
+  return snap.exists() ? shapeWeek(snap.data()) : shapeWeek(DEFAULT_WEEKLY_MENU);
+}
+
+/** Repository object — screens/hooks talk to THIS, never to Firestore directly. */
+export const menuRepository = { getWeeklyMenu, subscribeToWeeklyMenu };

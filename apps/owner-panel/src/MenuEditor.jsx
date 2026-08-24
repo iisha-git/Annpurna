@@ -1,0 +1,139 @@
+import { useEffect, useState } from 'react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+
+import { db } from './firebase';
+import { DAYS, DAY_LABELS, DEFAULT_WEEK, MEALS, MEAL_LABELS } from './menuData';
+
+/**
+ * WEEK'S MENU EDITOR — one Firestore doc (menus/current) holds the week.
+ *
+ * Editing model: each meal is a plain textarea, ONE DISH PER LINE. Simple
+ * to build, fast for the owner, and parsing happens only on Save.
+ * Students' phones update live the moment this saves.
+ */
+
+const MENU_DOC = doc(db, 'menus', 'current');
+
+function textsFromWeek(week) {
+  const t = {};
+  for (const day of DAYS) {
+    for (const meal of MEALS) {
+      t[`${day}.${meal}`] = (week[day]?.[meal] ?? []).join('\n');
+    }
+  }
+  return t;
+}
+
+export default function MenuEditor() {
+  const [texts, setTexts] = useState(null); // null = still loading
+  const [activeDay, setActiveDay] = useState('MON');
+  const [status, setStatus] = useState(''); // '' | 'dirty' | 'saving' | 'saved' | error msg
+  const [loadedFromCloud, setLoadedFromCloud] = useState(false);
+
+  useEffect(() => {
+    getDoc(MENU_DOC)
+      .then((snap) => {
+        if (snap.exists()) {
+          setLoadedFromCloud(true);
+          setTexts(textsFromWeek(snap.data()));
+        } else {
+          setStatus('no-menu-yet');
+          setTexts(textsFromWeek(DEFAULT_WEEK));
+        }
+      })
+      .catch((err) => {
+        // Rules may not be published yet — fall back to defaults, editable offline
+        setStatus(`load-failed: ${err.code}`);
+        setTexts(textsFromWeek(DEFAULT_WEEK));
+      });
+  }, []);
+
+  if (!texts) return <p className="muted">Loading menu…</p>;
+
+  function edit(key, value) {
+    setTexts((prev) => ({ ...prev, [key]: value }));
+    setStatus('dirty');
+  }
+
+  async function handleSave() {
+    setStatus('saving');
+    /** @type {Record<string, Record<string, string[]>>} */
+    const week = {};
+    for (const day of DAYS) {
+      week[day] = {};
+      for (const meal of MEALS) {
+        week[day][meal] = texts[`${day}.${meal}`]
+          .split('\n')
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+    }
+    try {
+      await setDoc(MENU_DOC, week);
+      setStatus('saved');
+    } catch (err) {
+      setStatus(`save-failed: ${err.message}`);
+    }
+  }
+
+  function loadDefault() {
+    setTexts(textsFromWeek(DEFAULT_WEEK));
+    setStatus('dirty');
+  }
+
+  return (
+    <section className="card">
+      <div className="editorHead">
+        <div>
+          <h2 style={{ marginBottom: 4 }}>This week's menu</h2>
+          <p className="muted" style={{ margin: 0 }}>
+            {status === 'no-menu-yet' && 'No menu in Firebase yet — review and hit Save to publish.'}
+            {status === 'dirty' && 'Unsaved changes'}
+            {status === 'saving' && 'Saving…'}
+            {status === 'saved' && `Saved ✓ — phones update instantly${loadedFromCloud ? '' : ' (first publish)'}`}
+            {status.startsWith('save-failed') && `Save failed: ${status}`}
+            {status.startsWith('load-failed') && `Couldn't load from Firebase (${status}) — editing local defaults.`}
+            {status === '' && loadedFromCloud && 'Loaded from Firebase'}
+          </p>
+        </div>
+        <div className="editorActions">
+          <button className="ghost dark" onClick={loadDefault}>Load default week</button>
+          <button
+            className="primaryBtn"
+            onClick={handleSave}
+            disabled={status === 'saving' || status === 'saved'}>
+            {status === 'saving' ? 'Saving…' : 'Save to Firebase'}
+          </button>
+        </div>
+      </div>
+
+      {/* Day switcher */}
+      <div className="dayTabs">
+        {DAYS.map((d) => (
+          <button
+            key={d}
+            className={activeDay === d ? 'active' : ''}
+            onClick={() => setActiveDay(d)}>
+            {DAY_LABELS[d].slice(0, 3)}
+          </button>
+        ))}
+      </div>
+
+      {/* Four meals for the active day */}
+      <div className="meals">
+        {MEALS.map((meal) => (
+          <label key={meal} className="mealBlock">
+            <span className="mealName">{MEAL_LABELS[meal]}</span>
+            <textarea
+              rows={Math.max(4, texts[`${activeDay}.${meal}`].split('\n').length + 1)}
+              value={texts[`${activeDay}.${meal}`]}
+              onChange={(e) => edit(`${activeDay}.${meal}`, e.target.value)}
+              placeholder={'One dish per line'}
+              spellCheck={false}
+            />
+          </label>
+        ))}
+      </div>
+    </section>
+  );
+}

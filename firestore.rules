@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANNPURNA FIRESTORE SECURITY RULES
+//
+// Default posture: DENY EVERYTHING. Only the doors listed below exist.
+// Paste this into Firebase console → Firestore Database → Rules → Publish.
+//
+// BEFORE PUBLISHING: replace PASTE_OWNER_UID_HERE with the real UID of
+// your owner account (Authentication → Users → "User UID" column).
+// ─────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // The ONE owner account — full write power over mess data.
+    function isOwner() {
+      return request.auth != null
+        && request.auth.uid == 'iFNo8uHJG1MsvI6VlMFfql5d86E3';
+    }
+
+    // Weekly menu — students read, only the owner edits.
+    match /menus/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isOwner();
+    }
+
+    // Everything not matched above stays fully locked.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

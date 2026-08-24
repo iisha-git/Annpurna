@@ -118,6 +118,11 @@ export default function ProfileScreen() {
           Mess number & status are view-only — always in sync
         </KnowTile>
       </View>
+
+      {/* Quiet sign-off */}
+      <AppText variant="caption" style={styles.versionFooter}>
+        Annpurna · student v1.0.0
+      </AppText>
     </Screen>
   );
 }
@@ -296,5 +301,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodySemi,
     color: colors.textMuted,
     lineHeight: 19,
+  },
+  versionFooter: {
+    textAlign: 'center',
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
   },
 });
