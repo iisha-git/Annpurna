@@ -1,25 +1,44 @@
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
-import { auth } from './firebase';
+import { api, setToken } from './api';
+import LeavesEditor from './LeavesEditor';
 import MenuEditor from './MenuEditor';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
 
-  // Session listener — fires once immediately, then on every login/logout
-  useEffect(() => onAuthStateChanged(auth, (u) => {
-    setUser(u);
-    setAuthReady(true);
-  }), []);
+  // Session restore — if a token exists, validate it against /auth/me
+  useEffect(() => {
+    let alive = true;
+    api
+      .get('/auth/me')
+      .then(({ user: u }) => {
+        if (alive) setUser(u);
+      })
+      .catch(() => {
+        if (alive) setToken(null); // expired / invalid → drop session
+      })
+      .finally(() => {
+        if (alive) setAuthReady(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   if (!authReady) return <p className="center muted">Connecting to Annpurna…</p>;
-  if (!user) return <Login />;
-  return <Shell user={user} />;
+  if (!user) return <Login onAuthed={setUser} />;
+
+  async function signOut() {
+    setToken(null);
+    setUser(null);
+  }
+
+  return <Shell user={user} onSignOut={signOut} />;
 }
 
-function Login() {
+function Login({ onAuthed }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -30,12 +49,14 @@ function Login() {
     setBusy(true);
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
-      // onAuthStateChanged takes it from here
+      const { token, user } = await api.post('/auth/login', {
+        identifier: email.trim(),
+        password,
+      });
+      setToken(token);
+      onAuthed(user);
     } catch (err) {
-      setError(err.code === 'auth/invalid-credential'
-        ? 'Wrong email or password.'
-        : `Sign-in failed (${err.code}).`);
+      setError(err.message);
       setBusy(false);
     }
   }
@@ -76,7 +97,7 @@ const TABS = [
   ['override', 'Crowd Override'],
 ];
 
-function Shell({ user }) {
+function Shell({ user, onSignOut }) {
   const [tab, setTab] = useState('menu');
 
   return (
@@ -85,7 +106,7 @@ function Shell({ user }) {
         <span className="brand">Annpurna · Owner</span>
         <span className="spacer" />
         <span className="muted">{user.email}</span>
-        <button className="ghost" onClick={() => signOut(auth)}>Sign out</button>
+        <button className="ghost" onClick={onSignOut}>Sign out</button>
       </header>
 
       <nav className="tabs">
@@ -101,7 +122,7 @@ function Shell({ user }) {
 
       <main className="content">
         {tab === 'menu' && <MenuEditor />}
-        {tab === 'leaves' && <Placeholder title="Approved leaves" note="Mark student leave days per date." />}
+        {tab === 'leaves' && <LeavesEditor />}
         {tab === 'override' && <Placeholder title="Crowd override" note="One-tap 'it's packed' override." />}
       </main>
     </>

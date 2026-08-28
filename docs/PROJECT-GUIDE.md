@@ -28,39 +28,55 @@ Key mental model: you never write HTML or CSS. You write **React components** (J
 
 ```
 Annpurna/                      ← git repo root
-└── apps/student/              ← the student mobile app
-    ├── app/                   ← SCREENS & NAVIGATION (Expo Router)
-    │   ├── _layout.js         ← root layout: wraps every screen
-    │   ├── +not-found.js      ← shown for unknown URLs/routes
-    │   └── (tabs)/            ← the bottom tab bar section
-    │       ├── _layout.js     ← defines the 4 tabs
-    │       ├── index.js       ← Home tab = THE CROWD SCREEN (route wrapper)
-    │       ├── menu.js        ← Menu tab (/menu)
-    │       ├── status.js      ← Mess Status tab (/status)
-    │       └── profile.js     ← Profile tab (/profile)
-    ├── shared/                ← used by ALL features
-    │   ├── theme/tokens.js    ← colors, spacing, fonts — single source of truth
-    │   └── ui/                ← reusable building blocks (Card, Button…)
-    ├── features/
-    │   ├── crowd/             ← Step 5: THE CORE FEATURE
-    │   │   ├── domain/crowd-model.js      ← CrowdStatus / Report / Visit types
-    │   │   ├── domain/crowd-rules.js      ← aggregation + override resolution (PURE)
-    │   │   ├── data/mock-crowd-repository.js  ← simulates GPS+push+other students
-    │   │   └── presentation/
-    │   │       ├── use-crowd-status.js    ← live subscription hook
-    │   │       ├── crowd-card.js          ← hero status card
-    │   │       ├── crowd-feedback-prompt.js ← push-notification stand-in modal
-    │   │       └── home-screen.js         ← composition + dev simulation panel
-    │   ├── menu/              ← complete feature (Step 2 pattern reference)
-    │   ├── mess-status/       ← complete feature (Step 3)
-    │   ├── profile/           ← complete feature (Step 4)
-    │   └── streak/            ← skeleton (upcoming)
-    ├── assets/images/         ← app icon, splash screen images
-    ├── app.json               ← app identity: name, icon, splash colors
-    ├── eas.json               ← cloud build profiles (dev/preview/production)
-    ├── package.json           ← dependencies + scripts
-    ├── jsconfig.json          ← enables the @/ import shortcut
-    └── .gitignore             ← files git must ignore (node_modules etc.)
+├── apps/
+│   ├── student/               ← the student mobile app (Expo)
+│   │   ├── app/               ← SCREENS & NAVIGATION (Expo Router)
+│   │   │   ├── _layout.js     ← root layout: wraps every screen
+│   │   │   ├── +not-found.js  ← shown for unknown URLs/routes
+│   │   │   ├── login.js       ← /login — session gate + auth screen
+│   │   │   └── (tabs)/        ← the bottom tab bar section
+│   │   │       ├── _layout.js ← defines the 4 tabs
+│   │   │       ├── index.js   ← Home tab = THE CROWD SCREEN (route wrapper)
+│   │   │       ├── menu.js    ← Menu tab (/menu)
+│   │   │       ├── status.js  ← Mess Status tab (/status)
+│   │   │       └── profile.js ← Profile tab (/profile)
+│   │   ├── shared/            ← used by ALL features
+│   │   │   ├── theme/tokens.js    ← colors, spacing, fonts — single source of truth
+│   │   │   ├── lib/api.js         ← the ONE API client (attach my JWT)
+│   │   │   └── ui/                ← reusable building blocks (Card, Button…)
+│   │   ├── features/
+│   │   │   ├── crowd/         ← Step 5: THE CORE FEATURE
+│   │   │   │   ├── domain/crowd-model.js      ← CrowdStatus / Report / Visit types
+│   │   │   │   ├── domain/crowd-rules.js      ← aggregation + override resolution (PURE)
+│   │   │   │   ├── data/mock-crowd-repository.js ← simulates GPS+push+other students
+│   │   │   │   └── presentation/
+│   │   │   │       ├── use-crowd-status.js    ← live subscription hook
+│   │   │   │       ├── crowd-card.js          ← hero status card
+│   │   │   │       ├── crowd-feedback-prompt.js ← push-notification stand-in modal
+│   │   │   │       └── home-screen.js         ← composition + dev simulation panel
+│   │   │   ├── menu/          ← reads /api/menu via the shared API client
+│   │   │   ├── mess-status/   ← reads own leave dates from /api/leaves/mine
+│   │   │   ├── profile/       ← reads /api/students/me
+│   │   │   └── streak/        ← skeleton (upcoming)
+│   │   ├── assets/images/     ← app icon, splash screen images
+│   │   ├── app.json           ← app identity: name, icon, splash colors
+│   │   ├── eas.json           ← cloud build profiles (dev/preview/production)
+│   │   ├── package.json       ← dependencies + scripts
+│   │   └── jsconfig.json      ← enables the @/ import shortcut
+│   ├── owner-panel/           ← the mess owner's web panel (React + Vite)
+│   │   └── src/
+│   │       ├── api.js         ← its one API client (JWT in localStorage)
+│   │       ├── App.jsx        ← login gate + tab shell
+│   │       ├── LeavesEditor.jsx ← roster TSV import, leave toggles (polls API)
+│   │       └── MenuEditor.jsx  ← week editor (GET/PUT /api/menu)
+│   └── api/                   ← the MongoDB backend (Node + Express + Mongoose)
+│       └── src/
+│           ├── index.js       ← Express app, route mounting, connects Mongo
+│           ├── config.js      ← env-driven settings (PORT, MONGODB_URI, JWT…)
+│           ├── models/        ← Student, Owner, Menu, Leave schemas
+│           ├── middleware/auth.js ← requireAuth + requireOwner (JWT)
+│           ├── routes/        ← auth, menu, students, leaves
+│           └── seed.js        ← idempotent startup seed (menu + owner)
 ```
 
 ### Why `features/<name>/{domain,data,presentation}`?
@@ -131,12 +147,13 @@ features/menu/
 
 Data flow on screen:
 ```
-MenuScreen mounts → useWeeklyMenu() → menuRepository.getWeeklyMenu()
-                  → fake 600ms delay → weekly data → state updates → UI renders
+MenuScreen mounts → useWeeklyMenu() → menuRepository.subscribeToWeeklyMenu()
+                  → poll GET /api/menu every 5s → weekly data → UI renders
 ```
 
-**Why the repository layer matters:** the screen never knows data was hardcoded.
-When the owner panel exists and menus live in a database, we rewrite ONLY
+**Why the repository layer matters:** the screen never knows the week came
+over HTTP. Two apps share the same backend now: the owner panel edits
+`/api/menu` and this app polls it. If the API ever changes, we rewrite ONLY
 `menu-repository.js` internals. Zero UI changes. This is the single most
 important architecture idea in this project.
 
@@ -215,19 +232,39 @@ Key ideas:
 | "Project is incompatible with this version of Expo Go" | Play Store Expo Go lags behind newest SDK (we're on SDK 57) | We solved this permanently with our own dev build from EAS |
 | `Cannot read property 'create' of undefined` at `StyleSheet.create` | Imported `StyleSheet` from the wrong library (`react-native-safe-area-context`) | `StyleSheet`, `View`, `Text`, `Pressable` come ONLY from `'react-native'`; libraries export just their own tools |
 | Red screen after an error is fixed | Bundler kept the crashed state | Press `r` in the expo terminal for a full reload |
+| `MongooseServerSelectionError` … `tlsv1 alert internal error` when the API connects to Atlas | The network is filtering connections to the Atlas shard IPs (firewalls do this on some campus/hostel/ISP connections); DNS, HTTPS and the Atlas control plane all still work | Try a different network (mobile hotspot) or a VPN. Verify with `tls.connect` to the shard host on 27017; also allow your IP in Atlas → Network Access |
 
 ---
 
 ## 5. Command cheat sheet
 
+Student app:
+
 ```bash
 cd apps\student
 npx expo start          # dev server + QR code (press r=reload, j=debugger)
 npx expo export --platform android   # verify everything bundles (used before commits)
-npm uninstall <pkg>     # remove dependency
 ```
 
-Install **Expo Go** on your phone → scan QR → instant live testing.
+Backend:
+
+```bash
+cd apps\api
+npm run seed            # create/update the owner + default menu from .env
+npm run dev             # start the API on http://localhost:4000
+```
+
+Owner panel:
+
+```bash
+cd apps\owner-panel
+npm run dev             # start on http://localhost:5173
+npm run build           # production build (verify before commits)
+```
+
+Install **Expo Go** on your phone → scan QR → instant live testing. On a real
+phone, point both apps at your computer's LAN IP (`VITE_API_URL` /
+`EXPO_PUBLIC_API_URL`) instead of `localhost`.
 
 ---
 
@@ -236,8 +273,25 @@ Install **Expo Go** on your phone → scan QR → instant live testing.
 1. Design values come from `tokens.js` only
 2. New UI pieces go in `shared/ui`; feature-specific screens stay in their feature
 3. Business vocabulary lives in `features/*/domain` with JSDoc typedefs
-4. Mocks behind interfaces until backend exists (agreed architecture)
+4. Screens never touch the network: `data/*-repository.js` wraps `shared/lib/api.js`
 5. Guide updated after every build step
+
+## 6.5 The backend (Node + Express + Mongoose)
+
+`apps/api` owns all data and auth. Every client (owner web panel + student
+phone) talks to it over JSON at `http://<host>:4000/api`:
+
+- **Auth is JWT + bcrypt.** Student sign-in is *mess number + password*;
+  sign-up claims a roster number by matching name + mobile against the list
+  the owner imported. The owner signs in with an email + password (created
+  by `npm run seed`). No Firebase anywhere anymore.
+- **Collections:** `students` keys docs by mess number; `leaves` are unique
+  per (messNumber, date); `menus` is a single "current" week document.
+- **Roster importing** accepts the mess office TSV (6 columns). Only the
+  first mobile is kept; students with a missing/10-digit-invalid mobile are
+  skipped and reported, so the owner can fix numbers and re-import.
+- Owner-only routes go through `[requireAuth, requireOwner]`; students can
+  read the menu and their own leave dates / profile only.
 
 ---
 

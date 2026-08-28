@@ -1,0 +1,7 @@
+﻿node_modules/
+.env
+apps/api/node_modules/
+apps/owner-panel/node_modules/
+apps/student/node_modules/
+apps/owner-panel/dist/
+*.log

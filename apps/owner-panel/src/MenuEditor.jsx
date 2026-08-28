@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-import { db } from './firebase';
+import { api } from './api';
 import { DAYS, DAY_LABELS, DEFAULT_WEEK, MEALS, MEAL_LABELS } from './menuData';
 
 /**
- * WEEK'S MENU EDITOR — one Firestore doc (menus/current) holds the week.
+ * WEEK'S MENU EDITOR — one MongoDB menu doc ("current") holds the week.
  *
  * Editing model: each meal is a plain textarea, ONE DISH PER LINE. Simple
  * to build, fast for the owner, and parsing happens only on Save.
- * Students' phones update live the moment this saves.
+ * Students' phones poll the API and pick up changes.
  */
-
-const MENU_DOC = doc(db, 'menus', 'current');
 
 function textsFromWeek(week) {
   const t = {};
@@ -31,19 +28,16 @@ export default function MenuEditor() {
   const [loadedFromCloud, setLoadedFromCloud] = useState(false);
 
   useEffect(() => {
-    getDoc(MENU_DOC)
-      .then((snap) => {
-        if (snap.exists()) {
-          setLoadedFromCloud(true);
-          setTexts(textsFromWeek(snap.data()));
-        } else {
-          setStatus('no-menu-yet');
-          setTexts(textsFromWeek(DEFAULT_WEEK));
-        }
+    api
+      .get('/menu')
+      .then(({ week }) => {
+        setLoadedFromCloud(true);
+        setStatus('');
+        setTexts(textsFromWeek(week));
       })
       .catch((err) => {
-        // Rules may not be published yet — fall back to defaults, editable offline
-        setStatus(`load-failed: ${err.code}`);
+        // API unreachable — fall back to defaults, editable offline
+        setStatus(`load-failed: ${err.message}`);
         setTexts(textsFromWeek(DEFAULT_WEEK));
       });
   }, []);
@@ -69,7 +63,7 @@ export default function MenuEditor() {
       }
     }
     try {
-      await setDoc(MENU_DOC, week);
+      await api.put('/menu', { week });
       setStatus('saved');
     } catch (err) {
       setStatus(`save-failed: ${err.message}`);
@@ -87,13 +81,12 @@ export default function MenuEditor() {
         <div>
           <h2 style={{ marginBottom: 4 }}>This week's menu</h2>
           <p className="muted" style={{ margin: 0 }}>
-            {status === 'no-menu-yet' && 'No menu in Firebase yet — review and hit Save to publish.'}
             {status === 'dirty' && 'Unsaved changes'}
             {status === 'saving' && 'Saving…'}
-            {status === 'saved' && `Saved ✓ — phones update instantly${loadedFromCloud ? '' : ' (first publish)'}`}
+            {status === 'saved' && `Saved ✓ — phones update shortly${loadedFromCloud ? '' : ' (first publish)'}`}
             {status.startsWith('save-failed') && `Save failed: ${status}`}
-            {status.startsWith('load-failed') && `Couldn't load from Firebase (${status}) — editing local defaults.`}
-            {status === '' && loadedFromCloud && 'Loaded from Firebase'}
+            {status.startsWith('load-failed') && `Couldn't reach the API (${status}) — editing local defaults.`}
+            {status === '' && loadedFromCloud && 'Loaded from the server'}
           </p>
         </div>
         <div className="editorActions">
@@ -102,7 +95,7 @@ export default function MenuEditor() {
             className="primaryBtn"
             onClick={handleSave}
             disabled={status === 'saving' || status === 'saved'}>
-            {status === 'saving' ? 'Saving…' : 'Save to Firebase'}
+            {status === 'saving' ? 'Saving…' : 'Save changes'}
           </button>
         </div>
       </div>

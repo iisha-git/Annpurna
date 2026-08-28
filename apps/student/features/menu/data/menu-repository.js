@@ -1,17 +1,14 @@
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-
-import { db } from '@/shared/lib/firebase';
+import { api } from '@/shared/lib/api';
 import { MEAL_SLOTS, WEEKDAYS } from '../domain/menu-model';
 
 /**
  * MENU REPOSITORY — the ONLY place the app asks "what's the menu?"
  *
- * LIVE from Firestore: one document (`menus/current`) holds the whole
- * week. The owner panel edits it; every open phone updates instantly
- * through onSnapshot — no pull-to-refresh needed.
- *
- * If the document doesn't exist yet (fresh project), we fall back to the
- * built-in week below so the app never shows an empty screen.
+ * POLLS the API every 5s: one menu doc holds the whole week, the owner
+ * panel edits it, and each open phone picks up the change within a few
+ * seconds of a save. If the server is unreachable we keep showing the last
+ * good week — and fall back to the built-in week below if we never
+ * managed to fetch anything (fresh install, owner not yet online).
  */
 
 const MEAL_TIMES = {
@@ -67,10 +64,7 @@ export const DEFAULT_WEEKLY_MENU = {
   },
 };
 
-/** Firestore path of the single menu document. */
-export const MENU_DOC_PATH = ['menus', 'current'];
-
-/** Firestore stores {MON:{BREAKFAST:[...],...}} → shape it for the UI contract. */
+/** API stores {MON:{BREAKFAST:[...],...}} → shape it for the UI contract. */
 function shapeWeek(raw) {
   /** @type {Record<string, any>} */
   const week = {};
@@ -88,31 +82,47 @@ function shapeWeek(raw) {
   return week;
 }
 
-function menuRef() {
-  return doc(db, ...MENU_DOC_PATH);
-}
-
 /**
- * Live subscription — fires immediately with current state, then again on
- * EVERY owner edit. Returns an unsubscribe function.
+ * Live polling — fires immediately with the current week, then refreshes
+ * on every poll tick. Returns an unsubscribe function.
  */
 export function subscribeToWeeklyMenu(onData, onError) {
-  return onSnapshot(
-    menuRef(),
-    (snap) => onData(shapeWeek(snap.exists() ? snap.data() : DEFAULT_WEEKLY_MENU)),
-    (err) => {
-      console.warn('[menu] live read failed:', err.code);
-      if (onError) onError(err);
-      onData(shapeWeek(DEFAULT_WEEKLY_MENU)); // degrade gracefully, never blank
+  let alive = true;
+  let hasData = false;
+
+  const tick = async () => {
+    try {
+      const { week } = await api.get('/menu');
+      if (!alive) return;
+      hasData = true;
+      onData(shapeWeek(week));
+    } catch (err) {
+      if (!alive) return;
+      // Never blank the screen: keep last good week, seed on first load.
+      if (!hasData) {
+        onData(shapeWeek(DEFAULT_WEEKLY_MENU));
+        if (onError) onError(err);
+      }
     }
-  );
+  };
+
+  tick();
+  const timer = setInterval(tick, 5000);
+  return () => {
+    alive = false;
+    clearInterval(timer);
+  };
 }
 
 /** One-time read (kept for compatibility with anything that prefers a promise). */
 export async function getWeeklyMenu() {
-  const snap = await getDoc(menuRef());
-  return snap.exists() ? shapeWeek(snap.data()) : shapeWeek(DEFAULT_WEEKLY_MENU);
+  try {
+    const { week } = await api.get('/menu');
+    return shapeWeek(week);
+  } catch {
+    return shapeWeek(DEFAULT_WEEKLY_MENU);
+  }
 }
 
-/** Repository object — screens/hooks talk to THIS, never to Firestore directly. */
+/** Repository object — screens/hooks talk to THIS, never to the API directly. */
 export const menuRepository = { getWeeklyMenu, subscribeToWeeklyMenu };

@@ -269,3 +269,135 @@ button {
 .mealBlock textarea:focus {
   border-color: var(--amber);
 }
+
+/* ── Approved leaves ─────────────────────────────────────────────── */
+
+.leavesGrid {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .leavesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.studentList {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.studentList button {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.studentList button.active {
+  border-color: var(--amber);
+  background: #fff7e6;
+  font-weight: 600;
+}
+
+.studentList li {
+  display: flex;
+  gap: 6px;
+}
+
+.studentList li button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.studentName {
+  font-weight: 600;
+}
+
+.studentMeta {
+  font-size: 12px;
+  color: var(--muted, #9a8f7f);
+}
+
+.rowDelete {
+  background: none !important;
+  border: 1px solid transparent !important;
+  color: var(--muted, #9a8f7f);
+  font-size: 13px;
+  padding: 0 6px !important;
+  cursor: pointer;
+}
+
+.rowDelete:hover {
+  color: #b45;
+}
+
+.bulkBox {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  resize: vertical;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+.leaveWeek {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.leaveChip {
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 8px;
+  cursor: pointer;
+}
+
+.leaveChip span {
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+.leaveChip small {
+  color: var(--muted, #9a8f7f);
+  font-size: 11.5px;
+}
+
+.leaveChip.today {
+  border-style: dashed;
+}
+
+.leaveChip.on {
+  background: #ffe9c2;
+  border-color: var(--amber);
+}

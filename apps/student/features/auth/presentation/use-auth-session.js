@@ -1,28 +1,65 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
 
-import { auth } from '@/shared/lib/firebase';
+import { api, clearToken, loadSession, setToken } from '@/shared/lib/api';
 
 /**
- * AUTH SESSION — one listener for the whole app.
+ * AUTH SESSION — the whole app's source of truth for "who is signed in?"
  *
- * AuthProvider sits at the root and listens to Firebase's session state;
- * any component calls useAuthSession() to know { user, loading }.
- * Firebase persists nothing between app restarts yet, so users sign in
- * once per launch until we add storage persistence.
+ * AuthProvider sits at the root. On launch it restores the persisted JWT
+ * from disk and validates it against /auth/me. signIn / signUp / signOut
+ * are exposed so screens never touch the API client directly.
  */
 
 const AuthContext = createContext({ user: null, loading: true });
 
 export function AuthProvider({ children }) {
-  const [state, setState] = useState({ user: null, loading: true });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fires immediately with current state, then on every sign-in/out
-    return onAuthStateChanged(auth, (user) => setState({ user, loading: false }));
+    let alive = true;
+    loadSession()
+      .then(() => api.get('/auth/me'))
+      .then(({ user: u }) => {
+        if (alive) setUser(u);
+      })
+      .catch(() => {
+        if (alive) {
+          clearToken(); // expired / invalid session
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
+  /** Identifier = mess number (owner accounts never appear in this app). */
+  async function signIn(identifier, password) {
+    const { token, user: u } = await api.post('/auth/login', { identifier, password });
+    await setToken(token);
+    setUser(u);
+  }
+
+  async function signUp(payload) {
+    const { token, user: u } = await api.post('/auth/signup', payload);
+    await setToken(token);
+    setUser(u);
+  }
+
+  async function signOut() {
+    await clearToken();
+    setUser(null);
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuthSession() {

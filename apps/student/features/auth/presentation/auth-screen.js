@@ -10,22 +10,30 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
-import { auth } from '@/shared/lib/firebase';
+import { useAuthSession } from './use-auth-session';
 import { AppText, Screen } from '@/shared/ui';
 import { DoodleBowl } from '@/shared/ui/doodles/Doodles';
 import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 
 /**
- * SIGN IN / CREATE ACCOUNT — students register with any email + password.
- * The email is just an account handle; no personal data required.
- * After success, onAuthStateChanged flips and routing takes over.
+ * SIGN IN / CREATE ACCOUNT — students identify by mess number.
+ *
+ * Sign in:   mess number + password
+ * Sign up:   full name, mobile number, mess number, password, confirm.
+ *
+ * The API owns the claim check: your mess number must be on the roster the
+ * owner imported, its name + mobile must match what you type, and the first
+ * claim wins. Anything wrong shows up here as a friendly message.
  */
 export default function AuthScreen() {
+  const { signIn, signUp } = useAuthSession();
   const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
-  const [email, setEmail] = useState('');
+  const [messNo, setMessNo] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -36,20 +44,37 @@ export default function AuthScreen() {
     };
   }
 
+  function localChecks() {
+    const mess = messNo.trim();
+    const name = fullName.trim().replace(/\s+/g, ' ');
+    const mob = mobile.trim().replace(/\D/g, '');
+    if (mode === 'signup') {
+      if (!mess || !name) throw 'Enter your mess number and full name.';
+      if (mob.length !== 10) throw "That doesn't look like a 10-digit mobile number.";
+      if (password.length < 6) throw 'Password needs at least 6 characters.';
+      if (password !== confirmPassword) throw "Passwords don't match.";
+      return { mess, name, mob };
+    }
+    if (!mess) throw 'Enter your mess number.';
+    if (!password) throw 'Enter your password.';
+    return { mess };
+  }
+
   async function handleSubmit() {
     if (busy) return;
     setBusy(true);
     setError('');
     try {
+      const { mess, name, mob } = localChecks();
       if (mode === 'signin') {
-        await signInWithEmailAndPassword(auth, email.trim(), password);
+        await signIn(mess, password);
       } else {
-        await createUserWithEmailAndPassword(auth, email.trim(), password);
+        await signUp({ messNumber: mess, name, mobile: mob, password });
       }
-      // AuthProvider hears the change → routing takes over
+      // The session update routes to the tabs automatically
     } catch (err) {
       setBusy(false);
-      setError(friendlyError(err.code));
+      setError(typeof err === 'string' ? err : err.message);
     }
   }
 
@@ -79,15 +104,35 @@ export default function AuthScreen() {
             </Pressable>
           </View>
 
+          {/* Claim fields — signup only */}
+          {mode === 'signup' && (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Full name (as per mess records)"
+                placeholderTextColor={colors.muted}
+                value={fullName}
+                onChangeText={setFullName}
+                autoCapitalize="words"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Mobile number (as per mess records)"
+                placeholderTextColor={colors.muted}
+                value={mobile}
+                onChangeText={(t) => setMobile(t.replace(/[^0-9/]/g, ''))}
+                keyboardType="phone-pad"
+              />
+            </>
+          )}
+
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder="Mess number"
             placeholderTextColor={colors.muted}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
+            value={messNo}
+            onChangeText={(t) => setMessNo(t.replace(/\D/g, ''))}
+            keyboardType="number-pad"
           />
           <TextInput
             style={styles.input}
@@ -97,6 +142,16 @@ export default function AuthScreen() {
             onChangeText={setPassword}
             secureTextEntry
           />
+          {mode === 'signup' ? (
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm password"
+              placeholderTextColor={colors.muted}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+            />
+          ) : null}
 
           {!!error && <Text style={styles.error}>{error}</Text>}
 
@@ -113,21 +168,13 @@ export default function AuthScreen() {
           </Pressable>
 
           <Text style={styles.fine}>
+            Sign in with your mess number and the password you set.
             Students never edit mess data — menus & leaves come from your owner.
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
   );
-}
-
-function friendlyError(code) {
-  if (code === 'auth/invalid-credential') return 'Wrong email or password.';
-  if (code === 'auth/email-already-in-use') return 'That email already has an account — sign in instead.';
-  if (code === 'auth/weak-password') return 'Password needs at least 6 characters.';
-  if (code === 'auth/invalid-email') return "That doesn't look like a valid email.";
-  if (code === 'auth/network-request-failed') return 'No internet connection.';
-  return 'Something went wrong. Try again.';
 }
 
 const styles = StyleSheet.create({

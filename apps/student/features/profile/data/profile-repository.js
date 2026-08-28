@@ -1,29 +1,27 @@
-import { isValidMessNumber } from '../domain/profile-model';
+import { api } from '@/shared/lib/api';
 
 /**
  * PROFILE REPOSITORY — where "who is logged in?" comes from.
  *
- * Mock: one hardcoded student (auth doesn't exist yet — agreed placeholder).
- * Later: real backend returns the signed-in student; internals change,
- * contract stays.
+ * The API returns the signed-in student (from the session JWT) plus their
+ * roster details. Field names are mapped here to the UI contract so the
+ * screen below never changes.
  */
 
-const CURRENT_STUDENT = {
-  id: 'student-001',
-  name: 'Isha Singh',
-  messNumber: '042',
-  course: 'B.Tech CSE',
-  room: 'H-204',
-};
-
-/** Sanity-check our own mock data against the domain rule. */
-if (!isValidMessNumber(CURRENT_STUDENT.messNumber)) {
-  throw new Error('Mock student has an invalid mess number');
+/** @param {any} s */
+function toProfileView(s) {
+  const course = [s.year, s.branch].filter(Boolean).join(' ');
+  return {
+    name: s.name,
+    messNumber: s.messNumber,
+    course: course || '—',
+    room: s.room || '—',
+  };
 }
 
 export async function getCurrentStudent() {
-  await new Promise((r) => setTimeout(r, 400));
-  return { ...CURRENT_STUDENT }; // return a copy — never share internal state
+  const { student } = await api.get('/students/me');
+  return toProfileView(student);
 }
 
 export const profileRepository = { getCurrentStudent };

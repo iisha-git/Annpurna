@@ -1,22 +1,26 @@
 import { daysInMonth, isFutureDay } from '../domain/mess-status-model';
+import { api } from '@/shared/lib/api';
 
 /**
  * MESS-STATUS REPOSITORY
  *
- * Business context: leave is recorded by the mess OWNER (on paper / owner panel).
- * Students only read their own monthly status here.
- *
- * Mock: deterministic fake data — everyone was present except a few
- * hardcoded approved leaves. Real backend replaces the internals later.
+ * Business context: leave is recorded by the mess OWNER (owner panel).
+ * Students only read their own approved annual leaves from the API and the
+ * screen turns them into a month-by-month attendance view.
  */
 
-// Approved leaves: "YYYY-MM": [days]
-const MOCK_APPROVED_LEAVES = {
-  // current-ish months get a few leaves; other months = full attendance
-  5: [3, 4],   // June
-  6: [17],     // July
-  7: [11, 12, 13], // August
-};
+/** @type {Record<number, any>} */
+function toStatusMap(datesForMonth, year, month) {
+  const total = daysInMonth(year, month);
+  const leaves = new Set(datesForMonth);
+  /** @type {Record<number, any>} */
+  const statuses = {};
+  for (let day = 1; day <= total; day++) {
+    if (isFutureDay(year, month, day)) continue; // future days: no status
+    statuses[day] = leaves.has(day) ? 'APPROVED_LEAVE' : 'PRESENT';
+  }
+  return statuses;
+}
 
 /**
  * @param {number} year
@@ -24,18 +28,13 @@ const MOCK_APPROVED_LEAVES = {
  * @returns {Promise<{statuses: Object<number, import('../domain/mess-status-model').DayStatus>}>}
  */
 export async function getMonthlyStatus(year, month) {
-  await new Promise((r) => setTimeout(r, 500));
+  const { dates } = await api.get('/leaves/mine'); // ["YYYY-MM-DD", ...]
+  const prefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
+  const days = dates
+    .filter((d) => d.startsWith(prefix))
+    .map((d) => Number(d.slice(prefix.length)));
 
-  const total = daysInMonth(year, month);
-  const leaves = MOCK_APPROVED_LEAVES[month] ?? [];
-  /** @type {Record<number, any>} */
-  const statuses = {};
-
-  for (let day = 1; day <= total; day++) {
-    if (isFutureDay(year, month, day)) continue; // future days: no status
-    statuses[day] = leaves.includes(day) ? 'APPROVED_LEAVE' : 'PRESENT';
-  }
-  return { statuses };
+  return { statuses: toStatusMap(days, year, month) };
 }
 
 export const messStatusRepository = { getMonthlyStatus };
