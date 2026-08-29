@@ -99,7 +99,7 @@ function parseRoster(text) {
 }
 
 export default function LeavesEditor() {
-  const [students, studentsError] = usePoll('/students', (d) =>
+  const [students, studentsError, refreshStudents] = usePoll('/students', (d) =>
     d.students
       .map((s) => ({ id: s.messNumber, ...s }))
       .sort((a, b) => (a.name || '').localeCompare(b.name || '')),
@@ -146,16 +146,65 @@ export default function LeavesEditor() {
         : '';
       setStatus(`Imported ${imported} / ${entries.length}${skippedNote}`);
       setBulkText('');
+      refreshStudents();
     } catch (err) {
       setError(`Import failed: ${err.message}`);
     }
   }
 
-  /* ── Remove roster entry ──────────────────────────────────────────── */
+  /* ── Quick add a single student ────────────────────────────────────── */
+
+  const blankQuick = { messNumber: '', name: '', mobile: '', year: '', branch: '', room: '' };
+  const [quick, setQuick] = useState(blankQuick);
+
+  async function quickAdd() {
+    const messNo = quick.messNumber.replace(/\s/g, '');
+    if (!/^\d+$/.test(messNo)) { setError('Enter a numeric mess number.'); return; }
+    if (!quick.name.trim()) { setError('Enter the student name.'); return; }
+    if (quick.mobile.replace(/\D/g, '').length !== 10) { setError('Mobile must be a 10-digit number.'); return; }
+    setError('');
+    try {
+      await api.post('/students', {
+        messNumber: messNo,
+        name: quick.name.trim().replace(/\s+/g, ' '),
+        mobile: quick.mobile.replace(/\D/g, ''),
+        year: quick.year.trim(),
+        branch: quick.branch.trim(),
+        room: quick.room.trim(),
+      });
+      setQuick(blankQuick);
+      setStatus('Student added.');
+      refreshStudents();
+    } catch (err) {
+      setError(`Couldn't add: ${err.message}`);
+    }
+  }
+
+  /* ── Soft-remove / restore ─────────────────────────────────────────── */
+
+  const [confirmRemoveId, setConfirmRemoveId] = useState(null);
 
   async function removeEntry(id) {
-    try { await api.del(`/students/${encodeURIComponent(id)}`); }
-    catch (err) { setError(`Delete failed: ${err.message}`); }
+    try {
+      await api.del(`/students/${encodeURIComponent(id)}`);
+      if (selectedId === id) setSelectedId(null);
+      setConfirmRemoveId(null);
+      setStatus('Moved to Removed (can be restored).');
+      refreshStudents();
+    } catch (err) {
+      setError(`Couldn't remove: ${err.message}`);
+    }
+  }
+
+  async function restoreEntry(id) {
+    try {
+      await api.post(`/students/${encodeURIComponent(id)}/restore`);
+      setError('');
+      setStatus('Restored to roster.');
+      refreshStudents();
+    } catch (err) {
+      setError(`Couldn't restore: ${err.message}`);
+    }
   }
 
   /* ── Leave toggle ─────────────────────────────────────────────────── */
@@ -183,6 +232,16 @@ export default function LeavesEditor() {
 
   const selected = students.find((s) => s.id === selectedId);
   const rosterStudents = students.filter((s) => s.name); // filter out legacy/stray docs
+  const activeStudents = rosterStudents.filter((s) => s.active !== false);
+  const removedStudents = rosterStudents.filter((s) => s.active === false);
+
+  const inputStyle = {
+    padding: '6px 8px',
+    border: '1px solid #d0d5dd',
+    borderRadius: 6,
+    fontSize: 13,
+    fontFamily: 'inherit',
+  };
 
   return (
     <div className="leavesGrid">
@@ -190,8 +249,42 @@ export default function LeavesEditor() {
       <section className="card studentCard">
         <h2 style={{ marginBottom: 4 }}>Roster</h2>
         <p className="muted" style={{ marginTop: 0, marginBottom: 8 }}>
-          {rosterStudents.length} students · {rosterStudents.filter((s) => s.claimed).length} linked
+          {activeStudents.length} students · {activeStudents.filter((s) => s.claimed).length} linked
+          {removedStudents.length ? ` · ${removedStudents.length} removed` : ''}
         </p>
+
+        {/* Quick add */}
+        <details style={{ marginBottom: 12 }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: 13.5 }}>
+            Quick add a student
+          </summary>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 6,
+              marginTop: 8,
+            }}>
+            <input placeholder="Mess no." style={inputStyle} value={quick.messNumber}
+              onChange={(e) => setQuick({ ...quick, messNumber: e.target.value })} />
+            <input placeholder="Name" style={inputStyle} value={quick.name}
+              onChange={(e) => setQuick({ ...quick, name: e.target.value })} />
+            <input placeholder="Mobile (10 digits)" style={inputStyle} value={quick.mobile}
+              onChange={(e) => setQuick({ ...quick, mobile: e.target.value })} />
+            <input placeholder="Year (BE/SE/TE)" style={inputStyle} value={quick.year}
+              onChange={(e) => setQuick({ ...quick, year: e.target.value })} />
+            <input placeholder="Branch (COMP/IT…)" style={inputStyle} value={quick.branch}
+              onChange={(e) => setQuick({ ...quick, branch: e.target.value })} />
+            <input placeholder="Room" style={inputStyle} value={quick.room}
+              onChange={(e) => setQuick({ ...quick, room: e.target.value })} />
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+            <button className="primaryBtn" onClick={quickAdd}>
+              Add student
+            </button>
+            {status && <span className="muted">{status}</span>}
+          </div>
+        </details>
 
         {/* Bulk import */}
         <details style={{ marginBottom: 12 }}>
@@ -213,16 +306,15 @@ export default function LeavesEditor() {
               disabled={!bulkText.trim()}>
               Import
             </button>
-            {status && <span className="muted">{status}</span>}
           </div>
         </details>
 
         {/* Student table */}
-        {rosterStudents.length === 0 ? (
-          <p className="muted">No students yet — paste the list above.</p>
+        {activeStudents.length === 0 ? (
+          <p className="muted">No students yet — quick add one or paste the list above.</p>
         ) : (
           <ul className="studentList">
-            {rosterStudents.map((s) => (
+            {activeStudents.map((s) => (
               <li key={s.id} className={selectedId === s.id ? 'selected' : ''}>
                 <button onClick={() => setSelectedId(s.id)}>
                   <span className="studentName">{s.name}</span>
@@ -230,15 +322,53 @@ export default function LeavesEditor() {
                     #{s.messNumber}{s.claimed ? ' · linked' : ' · unclaimed'}
                   </span>
                 </button>
-                <button
-                  className="rowDelete"
-                  title="Remove from roster"
-                  onClick={() => removeEntry(s.id)}>
-                  ✕
-                </button>
+                {confirmRemoveId === s.id ? (
+                  <span className="confirmRow">
+                    <button
+                      className="confirmYes"
+                      onClick={() => removeEntry(s.id)}>
+                      Remove
+                    </button>
+                    <button onClick={() => setConfirmRemoveId(null)}>Cancel</button>
+                  </span>
+                ) : (
+                  <button
+                    className="rowDelete"
+                    title="Remove from roster"
+                    onClick={() => setConfirmRemoveId(s.id)}>
+                    ✕
+                  </button>
+                )}
               </li>
             ))}
           </ul>
+        )}
+
+        {/* Removed entries — restorable */}
+        {removedStudents.length > 0 && (
+          <details style={{ marginTop: 12 }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: 13.5, color: '#b4512c' }}>
+              Removed ({removedStudents.length})
+            </summary>
+            <ul className="studentList">
+              {removedStudents.map((s) => (
+                <li key={s.id}>
+                  <span style={{ flex: 1, minWidth: 0, padding: '8px 10px' }}>
+                    <span className="studentName">{s.name}</span>
+                    <span className="studentMeta">
+                      #{s.messNumber}{s.claimed ? ' · linked' : ' · unclaimed'}
+                    </span>
+                  </span>
+                  <button
+                    className="rowDelete"
+                    title="Restore to roster"
+                    onClick={() => restoreEntry(s.id)}>
+                    Restore ↩
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
         {error && <p className="error" style={{ marginTop: 8 }}>{error}</p>}
       </section>

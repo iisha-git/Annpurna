@@ -18,6 +18,8 @@ const studentSchema = new Schema(
     passwordHash: { type: String, select: false },
     claimed: { type: Boolean, default: false },
     claimedAt: Date,
+    active: { type: Boolean, default: true },
+    removedAt: Date,
   },
   { versionKey: false }
 );

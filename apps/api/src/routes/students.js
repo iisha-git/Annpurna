@@ -14,12 +14,18 @@ const rosterView = (s) => ({
   room: s.room || null,
   mobile: s.mobile || null,
   claimed: !!s.claimed,
+  active: s.active !== false,
 });
 
-/** First number wins, digits only, must be 10 long — same rule as the panel. */
+/** First exactly-10-digit number wins, digits only — same rule as the panel.
+ *  The office sheets often list alternates like "83299076512/9763457429"
+ *  where the first is malformed but a later one is clean. */
 function normalizeMobile(raw) {
-  const first = String(raw ?? '').split(/[/\s,]+/)[0];
-  const digits = first.replace(/\D/g, '');
+  const candidates = String(raw ?? '')
+    .split(/[/\s,]+/)
+    .map((n) => n.replace(/\D/g, ''))
+    .filter((n) => n.length === 10);
+  const digits = candidates[0] || '';
   return { digits, ok: digits.length === 10 };
 }
 
@@ -91,11 +97,68 @@ router.post('/import', requireOwner, async (req, res, next) => {
   }
 });
 
-/** DELETE /api/students/:messNumber — remove a roster entry (owner only). */
+/**
+ * POST /api/students — quick-add a single student (owner only).
+ * body: { messNumber, name, year?, branch?, room?, mobile }
+ * Re-adding an existing number updates demographics only and reactivates a
+ * removed entry; claim fields are never touched.
+ */
+router.post('/', requireOwner, async (req, res, next) => {
+  try {
+    const messNo = String(req.body?.messNumber ?? '').trim();
+    if (!/^\d+$/.test(messNo)) {
+      return res.status(400).json({ error: 'Enter a numeric mess number.' });
+    }
+    const name = String(req.body?.name ?? '').replace(/\s+/g, ' ').trim();
+    if (!name) return res.status(400).json({ error: 'Enter the student name.' });
+    const { digits, ok } = normalizeMobile(req.body?.mobile);
+    if (!ok) return res.status(400).json({ error: 'Enter a valid 10-digit mobile number.' });
+
+    const student = await Student.findOneAndUpdate(
+      { _id: messNo },
+      {
+        $set: {
+          name,
+          mobile: digits,
+          year: req.body?.year || null,
+          branch: req.body?.branch || null,
+          room: req.body?.room || null,
+          active: true,
+        },
+        $unset: { removedAt: 1 },
+      },
+      { upsert: true, setDefaultsOnInsert: true, new: true }
+    );
+
+    res.json({ student: rosterView(student) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** DELETE /api/students/:messNumber — remove a roster entry (soft). */
 router.delete('/:messNumber', requireOwner, async (req, res, next) => {
   try {
-    await Student.findByIdAndDelete(req.params.messNumber);
-    res.json({ ok: true });
+    await Student.updateOne(
+      { _id: req.params.messNumber },
+      { $set: { active: false, removedAt: new Date() } }
+    );
+    res.json({ ok: true, active: false });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** POST /api/students/:messNumber/restore — bring a soft-removed entry back. */
+router.post('/:messNumber/restore', requireOwner, async (req, res, next) => {
+  try {
+    const student = await Student.findOneAndUpdate(
+      { _id: req.params.messNumber },
+      { $set: { active: true }, $unset: { removedAt: 1 } },
+      { new: true }
+    );
+    if (!student) return res.status(404).json({ error: 'Not in the roster.' });
+    res.json({ student: rosterView(student) });
   } catch (err) {
     next(err);
   }
