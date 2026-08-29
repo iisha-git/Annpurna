@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { weekdayKeyFor, WEEKDAYS, MEAL_LABELS } from '../domain/menu-model';
 import { formatStartsIn, mealMomentFor } from '../domain/meal-schedule';
 import { useWeeklyMenu } from './use-weekly-menu';
+import GeneralReviewModal from '../../reviews/presentation/general-review-modal';
 import { DoodleBowl } from '@/shared/ui/doodles/Doodles';
 import { AppText, Card, Screen } from '@/shared/ui';
 import { colors, radii, spacing } from '@/shared/theme/tokens';
@@ -20,6 +21,7 @@ export default function MenuScreen() {
   const { loading, week, error } = useWeeklyMenu();
   const todayKey = weekdayKeyFor(new Date());
   const [selectedDay, setSelectedDay] = useState(todayKey);
+  const [reviewVisible, setReviewVisible] = useState(false);
 
   // One snapshot of where we are in today's serving schedule
   const moment = useMemo(() => mealMomentFor(new Date()), []);
@@ -44,6 +46,9 @@ export default function MenuScreen() {
           <AppText variant="h1">Menu</AppText>
           <AppText variant="caption">What's cooking this week</AppText>
         </View>
+        <Pressable onPress={() => setReviewVisible(true)} style={styles.reviewBtn}>
+          <Ionicons name="chatbubble-ellipses-outline" size={24} color={colors.accentPressed} />
+        </Pressable>
       </View>
 
       {/* Day selector chips — circles with a today-marker dot underneath */}
@@ -116,6 +121,8 @@ export default function MenuScreen() {
           })}
         </View>
       )}
+
+      <GeneralReviewModal visible={reviewVisible} onClose={() => setReviewVisible(false)} />
     </Screen>
   );
 }
@@ -129,6 +136,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     marginBottom: spacing.xs,
+  },
+  reviewBtn: {
+    padding: spacing.sm,
+    backgroundColor: colors.accentSoft,
+    borderRadius: radii.round,
   },
   chipRow: {
     flexDirection: 'row',

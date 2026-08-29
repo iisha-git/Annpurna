@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js';
 import leaveRoutes from './routes/leaves.js';
 import menuRoutes from './routes/menu.js';
 import studentRoutes from './routes/students.js';
+import reviewRoutes from './routes/reviews.js';
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/leaves', leaveRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found.' }));
 

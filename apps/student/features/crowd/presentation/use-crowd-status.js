@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import * as crowdRepository from '../data/mock-crowd-repository';
+import * as crowdRepository from '../data/crowd-repository';
 
 /**
  * useCrowdStatus — subscribes the screen to live engine updates.
