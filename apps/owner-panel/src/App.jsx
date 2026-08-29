@@ -4,11 +4,18 @@ import { api, setToken } from './api';
 import LeavesEditor from './LeavesEditor';
 import MenuEditor from './MenuEditor';
 
+// New Pages
+import Dashboard from './pages/Dashboard';
+import StudentDetails from './pages/StudentDetails';
+import WorkerDetails from './pages/WorkerDetails';
+import Inventory from './pages/Inventory';
+import Reviews from './pages/Reviews';
+import Fees from './pages/Fees';
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
 
-  // Session restore — if a token exists, validate it against /auth/me
   useEffect(() => {
     let alive = true;
     api
@@ -17,7 +24,7 @@ export default function App() {
         if (alive) setUser(u);
       })
       .catch(() => {
-        if (alive) setToken(null); // expired / invalid → drop session
+        if (alive) setToken(null);
       })
       .finally(() => {
         if (alive) setAuthReady(true);
@@ -92,48 +99,89 @@ function Login({ onAuthed }) {
 }
 
 const TABS = [
-  ['menu', "Week's Menu"],
-  ['leaves', 'Approved Leaves'],
-  ['override', 'Crowd Override'],
+  ['dashboard', 'Dashboard'],
+  ['students', 'Student Details'],
+  ['workers', 'Worker Details'],
+  ['inventory', 'Inventory'],
+  ['reviews', 'Reviews'],
+  ['fees', 'Fees'],
+  ['leaves', 'Approved Leaves']
 ];
 
 function Shell({ user, onSignOut }) {
-  const [tab, setTab] = useState('menu');
+  const [tab, setTab] = useState('dashboard');
+  const [showMenu, setShowMenu] = useState(false);
 
   return (
-    <>
-      <header className="topbar">
-        <span className="brand">Annpurna · Owner</span>
-        <span className="spacer" />
-        <span className="muted">{user.email}</span>
-        <button className="ghost" onClick={onSignOut}>Sign out</button>
-      </header>
+    <div className="app-container">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-header">Annpurna</div>
+        <nav className="sidebar-nav">
+          {TABS.map(([key, label]) => (
+            <button
+              key={key}
+              className={`sidebar-btn ${tab === key && !showMenu ? 'active' : ''}`}
+              onClick={() => {
+                setTab(key);
+                setShowMenu(false);
+              }}>
+              {label}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <span className="user-info">{user.email}</span>
+          <button className="ghost" onClick={onSignOut}>Sign out</button>
+        </div>
+      </aside>
 
-      <nav className="tabs">
-        {TABS.map(([key, label]) => (
-          <button
-            key={key}
-            className={tab === key ? 'active' : ''}
-            onClick={() => setTab(key)}>
-            {label}
+      {/* Main Content */}
+      <main className="main-content">
+        <div className="topbar">
+          {tab === 'dashboard' && !showMenu && (
+            <div className="summary-cards" style={{ flex: 1, marginBottom: 0, marginRight: '32px' }}>
+              <div className="summary-card">
+                <div className="summary-label">Total Students</div>
+                <div className="summary-value">486</div>
+              </div>
+              <div className="summary-card">
+                <div className="summary-label">Present Today</div>
+                <div className="summary-value" style={{ color: 'var(--success)' }}>421</div>
+              </div>
+              <div className="summary-card">
+                <div className="summary-label">Absent Today</div>
+                <div className="summary-value" style={{ color: 'var(--danger)' }}>65</div>
+              </div>
+              <div className="summary-card">
+                <div className="summary-label">Pending Fees</div>
+                <div className="summary-value" style={{ color: 'var(--amber-pressed)' }}>₹18,500</div>
+              </div>
+            </div>
+          )}
+          <button 
+            className="menu-btn" 
+            onClick={() => setShowMenu(true)}>
+            Menu
           </button>
-        ))}
-      </nav>
+        </div>
 
-      <main className="content">
-        {tab === 'menu' && <MenuEditor />}
-        {tab === 'leaves' && <LeavesEditor />}
-        {tab === 'override' && <Placeholder title="Crowd override" note="One-tap 'it's packed' override." />}
+        <div className="content-scroll">
+          {showMenu ? (
+            <MenuEditor />
+          ) : (
+            <>
+              {tab === 'dashboard' && <Dashboard onNavigate={setTab} />}
+              {tab === 'students' && <StudentDetails />}
+              {tab === 'workers' && <WorkerDetails />}
+              {tab === 'inventory' && <Inventory />}
+              {tab === 'reviews' && <Reviews />}
+              {tab === 'fees' && <Fees />}
+              {tab === 'leaves' && <LeavesEditor />}
+            </>
+          )}
+        </div>
       </main>
-    </>
-  );
-}
-
-function Placeholder({ title, note }) {
-  return (
-    <section className="card">
-      <h2>{title}</h2>
-      <p className="muted">{note}</p>
-    </section>
+    </div>
   );
 }

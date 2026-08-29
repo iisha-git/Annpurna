@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import * as crowdRepository from '../../crowd/data/mock-crowd-repository';
+import * as crowdRepository from '../../crowd/data/crowd-repository';
 import { computeCurrentStreak, hasCheckedInToday } from '../domain/streak-model';
 
 /**

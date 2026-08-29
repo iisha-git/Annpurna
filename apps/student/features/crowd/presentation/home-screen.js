@@ -9,7 +9,7 @@ import HeaderDoodles from './header-doodles';
 import { useCrowdStatus } from './use-crowd-status';
 import TodayFoodCard from '../../menu/presentation/today-food-card';
 import { useStreak } from '../../streak/presentation/use-streak';
-import * as crowdRepository from '../data/mock-crowd-repository';
+import * as crowdRepository from '../data/crowd-repository';
 import { useProfile } from '../../profile/presentation/use-profile';
 import { AppText } from '@/shared/ui';
 import { DoodleBowl, DoodleFlame } from '@/shared/ui/doodles/Doodles';
