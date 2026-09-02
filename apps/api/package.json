@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "seed": "node src/seed-cli.js"
+    "seed": "node src/seed-cli.js",
+    "migrate:atlas": "node src/migrate-to-atlas.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

@@ -248,6 +248,13 @@ button {
   color: inherit;
 }
 
+/* Legacy standalone cards (Leaves editor etc.) */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+}
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -344,6 +351,14 @@ button {
   display: flex;
   gap: 10px;
   align-items: center;
+}
+
+.ghost {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
 }
 
 .ghost.dark {
@@ -467,6 +482,12 @@ button {
   gap: 2px;
 }
 
+.studentList li.selected button {
+  border-color: var(--amber);
+  background: #fff7e6;
+  font-weight: 600;
+}
+
 .studentName {
   font-weight: 600;
 }
@@ -476,6 +497,77 @@ button {
   color: var(--muted, #9a8f7f);
 }
 
+@media (max-width: 760px) {
+  .leavesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+details summary {
+  color: var(--ink);
+}
+
+.rowDelete {
+  background: none !important;
+  border: 1px solid transparent !important;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 0 8px !important;
+  cursor: pointer;
+  flex: 0 0 auto !important;
+  width: auto;
+  display: flex !important;
+  align-items: center;
+}
+
+.rowDelete:hover {
+  color: var(--danger);
+  border-color: var(--border) !important;
+}
+
+.studentList .confirmRow {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.studentList .confirmRow button {
+  flex: 0 0 auto;
+  width: auto;
+  display: inline-block;
+  padding: 8px 10px;
+  white-space: nowrap;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+.studentList .confirmRow .confirmYes {
+  background: #fff0d6 !important;
+  border-color: var(--amber) !important;
+  color: var(--danger) !important;
+  font-weight: 600;
+}
+
+.bulkBox {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  resize: vertical;
+  margin-top: 6px;
+}
+
+.bulkBox:focus {
+  outline: none;
+  border-color: var(--amber);
+  background: #fff;
+}
 .leaveWeek {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
@@ -514,4 +606,20 @@ button {
 .leaveChip.on {
   background: #ffe9c2;
   border-color: var(--amber);
+}
+
+.alerts-stack > li {
+  opacity: 0;
+  animation: alert-in 0.45s ease forwards;
+}
+
+@keyframes alert-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }

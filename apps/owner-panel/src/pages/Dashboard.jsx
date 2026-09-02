@@ -10,11 +10,11 @@ export default function Dashboard({ onNavigate }) {
           {/* Alerts Preview */}
           <div className="ui-card">
             <h2 style={{ color: 'var(--danger)' }}>Alerts</h2>
-            <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px', color: 'var(--ink)' }}>
-              <li><strong>Dal stock</strong> is running extremely low (8kg remaining)</li>
-              <li><strong>23 students</strong> have pending fees this month</li>
-              <li><strong>2 workers</strong> are on leave today</li>
-              <li><strong>14 new reviews</strong> received since yesterday</li>
+            <ul className="alerts-stack" style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px', color: 'var(--ink)' }}>
+              <li style={{ animationDelay: '0ms' }}><strong>Dal stock</strong> is running extremely low (8kg remaining)</li>
+              <li style={{ animationDelay: '550ms' }}><strong>23 students</strong> have pending fees this month</li>
+              <li style={{ animationDelay: '1100ms' }}><strong>2 workers</strong> are on leave today</li>
+              <li style={{ animationDelay: '1650ms' }}><strong>14 new reviews</strong> received since yesterday</li>
             </ul>
           </div>
 

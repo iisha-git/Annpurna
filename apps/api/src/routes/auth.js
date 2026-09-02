@@ -46,6 +46,9 @@ router.post('/signup', async (req, res, next) => {
     if (!student) {
       return res.status(404).json({ error: `Mess number "${mess}" is not on the mess list.` });
     }
+    if (student.active === false) {
+      return res.status(410).json({ error: `Mess number "${mess}" is no longer on the mess list. Ask the owner.` });
+    }
     if (student.claimed) {
       return res.status(409).json({ error: 'That mess number already has an account. Try signing in.' });
     }
@@ -92,7 +95,7 @@ router.post('/login', async (req, res, next) => {
     }
 
     const student = await Student.findById(identifier).select('+passwordHash');
-    if (!student || !student.claimed || !(await bcrypt.compare(password, student.passwordHash || ''))) {
+    if (!student || student.active === false || !student.claimed || !(await bcrypt.compare(password, student.passwordHash || ''))) {
       return res.status(401).json({ error: 'Wrong mess number or password.' });
     }
     res.json({ token: sign({ sub: student._id, role: 'student' }), user: studentView(student) });
