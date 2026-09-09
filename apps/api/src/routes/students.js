@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { requireAuth, requireOwner } from '../middleware/auth.js';
+import { Leave } from '../models/Leave.js';
 import { Student } from '../models/Student.js';
 
 const router = Router();
@@ -28,6 +29,29 @@ function normalizeMobile(raw) {
   const digits = candidates[0] || '';
   return { digits, ok: digits.length === 10 };
 }
+
+/** GET /api/students/attendance-summary — today's attendance stats (owner only). */
+router.get('/attendance-summary', requireOwner, async (req, res, next) => {
+  try {
+    const today = req.query.date || new Date().toISOString().slice(0, 10);
+    const totalStudents = await Student.countDocuments({ active: { $ne: false } });
+    const leavesToday = await Leave.find({ date: today }).lean();
+    const onLeaveMessNumbers = leavesToday.map((l) => l.messNumber);
+    const onLeaveCount = onLeaveMessNumbers.length;
+    const presentCount = Math.max(0, totalStudents - onLeaveCount);
+
+    res.json({
+      date: today,
+      total: totalStudents,
+      present: presentCount,
+      onLeave: onLeaveCount,
+      absent: onLeaveCount,
+      onLeaveMessNumbers,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 /** GET /api/students — full roster (owner only). */
 router.get('/', requireOwner, async (_req, res, next) => {

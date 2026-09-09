@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireOwner } from '../middleware/auth.js';
 import { CrowdReport } from '../models/CrowdReport.js';
 import { GeneralReview } from '../models/GeneralReview.js';
 
@@ -83,17 +83,40 @@ router.post('/general', requireAuth, async (req, res, next) => {
   }
 });
 
-/** GET /api/reviews/general — Fetch the 50 most recent general reviews. */
+/** GET /api/reviews/general — Fetch the 50 most recent general reviews with student info. */
 router.get('/general', async (_req, res, next) => {
   try {
     const reviews = await GeneralReview.find()
+      .populate('student', 'name room branch mobile')
       .sort({ createdAt: -1 })
       .limit(50)
       .lean();
-    res.json({ reviews });
+
+    const mapped = reviews.map((r) => ({
+      id: r._id,
+      _id: r._id,
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.createdAt,
+      student: r.student && typeof r.student === 'object' ? r.student : { _id: r.student, name: `Student #${r.student}` },
+    }));
+
+    res.json({ reviews: mapped });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** DELETE /api/reviews/:id — delete review (owner only) */
+router.delete('/:id', requireOwner, async (req, res, next) => {
+  try {
+    const result = await GeneralReview.findByIdAndDelete(req.params.id);
+    if (!result) return res.status(404).json({ error: 'Review not found.' });
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }
 });
 
 export default router;
+

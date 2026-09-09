@@ -12,6 +12,7 @@ import {
 
 import { colors } from '@/shared/theme/tokens';
 import { AuthProvider } from '@/features/auth/presentation/use-auth-session';
+import '@/features/crowd/data/background-geofence-task';
 
 export { ErrorBoundary } from 'expo-router';
 

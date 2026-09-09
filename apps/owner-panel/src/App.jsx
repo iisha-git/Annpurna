@@ -111,6 +111,33 @@ const TABS = [
 function Shell({ user, onSignOut }) {
   const [tab, setTab] = useState('dashboard');
   const [showMenu, setShowMenu] = useState(false);
+  const [stats, setStats] = useState({ total: 418, present: 418, onLeave: 0, absent: 0 });
+  const [pendingFees, setPendingFees] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    const loadStats = () => {
+      api.get('/students/attendance-summary')
+        .then((data) => {
+          if (alive && data) setStats(data);
+        })
+        .catch(() => {});
+
+      api.get('/fees')
+        .then((data) => {
+          if (alive && data?.stats) {
+            setPendingFees(data.stats.totalPending || 0);
+          }
+        })
+        .catch(() => {});
+    };
+    loadStats();
+    const timer = setInterval(loadStats, 10000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, []);
 
   return (
     <div className="app-container">
@@ -143,19 +170,19 @@ function Shell({ user, onSignOut }) {
             <div className="summary-cards" style={{ flex: 1, marginBottom: 0, marginRight: '32px' }}>
               <div className="summary-card">
                 <div className="summary-label">Total Students</div>
-                <div className="summary-value">486</div>
+                <div className="summary-value">{stats.total}</div>
               </div>
               <div className="summary-card">
                 <div className="summary-label">Present Today</div>
-                <div className="summary-value" style={{ color: 'var(--success)' }}>421</div>
+                <div className="summary-value" style={{ color: 'var(--success)' }}>{stats.present}</div>
               </div>
               <div className="summary-card">
-                <div className="summary-label">Absent Today</div>
-                <div className="summary-value" style={{ color: 'var(--danger)' }}>65</div>
+                <div className="summary-label">On Leave Today</div>
+                <div className="summary-value" style={{ color: 'var(--amber-pressed)' }}>{stats.onLeave}</div>
               </div>
               <div className="summary-card">
                 <div className="summary-label">Pending Fees</div>
-                <div className="summary-value" style={{ color: 'var(--amber-pressed)' }}>₹18,500</div>
+                <div className="summary-value" style={{ color: 'var(--amber-pressed)' }}>₹{pendingFees.toLocaleString('en-IN')}</div>
               </div>
             </div>
           )}
@@ -171,7 +198,7 @@ function Shell({ user, onSignOut }) {
             <MenuEditor />
           ) : (
             <>
-              {tab === 'dashboard' && <Dashboard onNavigate={setTab} />}
+              {tab === 'dashboard' && <Dashboard stats={stats} onNavigate={setTab} />}
               {tab === 'students' && <StudentDetails />}
               {tab === 'workers' && <WorkerDetails />}
               {tab === 'inventory' && <Inventory />}

@@ -3,6 +3,16 @@
  */
 
 // Demo controls on Home (simulate GPS entry, owner override).
-// TRUE while GPS/push aren't implemented, so anyone installing the APK
-// can try the full crowd flow. Set to FALSE before the final release build.
-export const SHOW_SIMULATION_TOOLS = true;
+// Set to FALSE for production/clean view.
+export const SHOW_SIMULATION_TOOLS = false;
+
+/**
+ * Mess Hall Geofence coordinates.
+ * Default radius in meters where student is considered inside the mess.
+ */
+export const DEFAULT_MESS_COORDINATES = {
+  latitude: 18.5204, // Default college campus / hostel mess latitude
+  longitude: 73.8567, // Default college campus / hostel mess longitude
+  radiusMeters: 40,   // 40m radius around the mess hall
+};
+

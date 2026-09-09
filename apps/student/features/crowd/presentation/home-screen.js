@@ -7,6 +7,7 @@ import CrowdCard from './crowd-card';
 import CrowdFeedbackPrompt from './crowd-feedback-prompt';
 import HeaderDoodles from './header-doodles';
 import { useCrowdStatus } from './use-crowd-status';
+import { useGeofence } from './use-geofence';
 import TodayFoodCard from '../../menu/presentation/today-food-card';
 import { useStreak } from '../../streak/presentation/use-streak';
 import * as crowdRepository from '../data/crowd-repository';
@@ -26,6 +27,7 @@ function greetingFor(hour) {
 
 export default function HomeScreen() {
   const snap = useCrowdStatus();
+  const geofence = useGeofence();
   const { student } = useProfile();
   const { streak } = useStreak();
   const insets = useSafeAreaInsets(); // absolute children ignore SafeArea padding
@@ -76,6 +78,37 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: spacing.xl, paddingBottom: 90 }}
         showsVerticalScrollIndicator={false}>
+        
+        {/* ── Geofence status banner ── */}
+        <View style={styles.geofenceWrap}>
+          <View
+            style={[
+              styles.geofenceDot,
+              geofence.isInside ? styles.geofenceDotInside : styles.geofenceDotOutside,
+            ]}
+          />
+          <AppText style={styles.geofenceText} numberOfLines={1}>
+            {geofence.permissionStatus !== 'granted'
+              ? 'GPS permission needed for mess geofence'
+              : geofence.isInside
+              ? 'Inside Mess Hall • Checkin active'
+              : `Outside Mess • ${geofence.distance != null ? `${geofence.distance}m away` : 'Locating…'}`}
+          </AppText>
+          {geofence.permissionStatus !== 'granted' ? (
+            <Pressable onPress={geofence.requestPermission} hitSlop={8}>
+              <AppText style={styles.geofenceAction}>Enable</AppText>
+            </Pressable>
+          ) : geofence.backgroundStatus === 'active' ? (
+            <View style={styles.bgBadge}>
+              <AppText style={styles.bgBadgeText}>24/7 Active</AppText>
+            </View>
+          ) : (
+            <Pressable onPress={geofence.startBackgroundGeofencing} hitSlop={8}>
+              <AppText style={styles.geofenceAction}>Enable 24/7</AppText>
+            </Pressable>
+          )}
+        </View>
+
         <View style={styles.sectionCaption}>
           <DoodleBowl size={22} color={colors.accent} />
           <AppText variant="caption" style={{ flex: 1 }}>
@@ -91,15 +124,15 @@ export default function HomeScreen() {
           <PressableChip label="Answer the crowd check-in" onPress={() => setPromptClosed(false)} />
         )}
 
-        {/* ── Simulation controls (demo builds) ── */}
+        {/* ── Simulation & Geofence controls (demo builds) ── */}
         {SHOW_SIMULATION_TOOLS && (
           <View style={styles.devArea}>
             <Pressable onPress={() => setDevOpen((v) => !v)} hitSlop={8}>
               <Text style={styles.devToggle}>
-                {devOpen ? '▾' : '▸'} DEV SIMULATION (not part of the app)
+                {devOpen ? '▾' : '▸'} DEV GEOFENCE & SIMULATION TOOLS
               </Text>
             </Pressable>
-            {devOpen && <SimulationPanel snap={snap} />}
+            {devOpen && <SimulationPanel snap={snap} geofence={geofence} />}
           </View>
         )}
       </ScrollView>
@@ -125,7 +158,7 @@ function PressableChip({ label, onPress }) {
   );
 }
 
-function SimulationPanel({ snap }) {
+function SimulationPanel({ snap, geofence }) {
   const Chip = ({ label, accent = false, onPress }) => (
     <Pressable
       onPress={onPress}
@@ -139,6 +172,20 @@ function SimulationPanel({ snap }) {
       <Chip
         label={snap.hasActiveVisit ? 'Simulate exit mess' : 'Simulate enter mess'}
         onPress={() => (snap.hasActiveVisit ? crowdRepository.leaveMess() : crowdRepository.enterMess())}
+      />
+      <Chip
+        label="Set Mess to My GPS"
+        accent
+        onPress={() => geofence?.setMessToCurrentLocation?.()}
+      />
+      <Chip
+        label={geofence?.backgroundStatus === 'active' ? 'Stop 24/7 Background' : 'Start 24/7 Background'}
+        accent={geofence?.backgroundStatus !== 'active'}
+        onPress={() =>
+          geofence?.backgroundStatus === 'active'
+            ? geofence?.stopBackgroundGeofencing?.()
+            : geofence?.startBackgroundGeofencing?.()
+        }
       />
       <Chip label="Override LOW" onPress={() => crowdRepository.setOwnerOverride('LOW')} />
       <Chip label="Override MODERATE" onPress={() => crowdRepository.setOwnerOverride('MODERATE')} />
@@ -259,4 +306,53 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textMuted,
   },
+  geofenceWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  geofenceDot: {
+    width: 8,
+    height: 8,
+    borderRadius: radii.pill,
+  },
+  geofenceDotInside: {
+    backgroundColor: colors.success,
+  },
+  geofenceDotOutside: {
+    backgroundColor: colors.textMuted,
+  },
+  geofenceText: {
+    flex: 1,
+    fontSize: 12.5,
+    fontFamily: fonts.bodySemi,
+    color: colors.textDark,
+  },
+  geofenceAction: {
+    fontSize: 12,
+    fontFamily: fonts.bold,
+    color: colors.accentPressed,
+    paddingHorizontal: 6,
+  },
+  bgBadge: {
+    backgroundColor: colors.successSoft,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: radii.pill,
+  },
+  bgBadgeText: {
+    fontSize: 11,
+    fontFamily: fonts.bold,
+    color: colors.success,
+  },
 });
+
+
