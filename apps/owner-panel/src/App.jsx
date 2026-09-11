@@ -46,8 +46,11 @@ export default function App() {
 }
 
 function Login({ onAuthed }) {
+  const [mode, setMode] = useState('login'); // 'login' | 'forgot'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [secretKey, setSecretKey] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -56,12 +59,22 @@ function Login({ onAuthed }) {
     setBusy(true);
     setError('');
     try {
-      const { token, user } = await api.post('/auth/login', {
-        identifier: email.trim(),
-        password,
-      });
-      setToken(token);
-      onAuthed(user);
+      if (mode === 'login') {
+        const { token, user } = await api.post('/auth/login', {
+          identifier: email.trim(),
+          password,
+        });
+        setToken(token);
+        onAuthed(user);
+      } else {
+        const res = await api.post('/auth/owner/reset-password', {
+          email: email.trim(),
+          secretKey: secretKey.trim(),
+          newPassword,
+        });
+        setToken(res.token);
+        onAuthed(res.user);
+      }
     } catch (err) {
       setError(err.message);
       setBusy(false);
@@ -72,7 +85,9 @@ function Login({ onAuthed }) {
     <main className="center">
       <form className="loginCard" onSubmit={handleSubmit}>
         <h1>Annpurna</h1>
-        <p className="muted">Mess owner panel</p>
+        <p className="muted">
+          {mode === 'login' ? 'Mess owner panel' : 'Reset owner password'}
+        </p>
         <input
           type="email"
           placeholder="Owner email"
@@ -81,18 +96,71 @@ function Login({ onAuthed }) {
           autoComplete="username"
           required
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-          required
-        />
+        {mode === 'login' ? (
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
+        ) : (
+          <>
+            <input
+              type="password"
+              placeholder="Recovery Secret Key (JWT_SECRET)"
+              value={secretKey}
+              onChange={(e) => setSecretKey(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="New Password (min 8 characters)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+          </>
+        )}
+
         {error && <p className="error">{error}</p>}
+
         <button type="submit" disabled={busy}>
-          {busy ? 'Signing in…' : 'Sign in'}
+          {busy
+            ? mode === 'login'
+              ? 'Signing in…'
+              : 'Resetting…'
+            : mode === 'login'
+            ? 'Sign in'
+            : 'Reset & Sign in'}
         </button>
+
+        <div style={{ marginTop: '8px' }}>
+          {mode === 'login' ? (
+            <button
+              type="button"
+              className="ghost"
+              style={{ fontSize: '13px', color: 'var(--amber-pressed)', textDecoration: 'underline' }}
+              onClick={() => {
+                setMode('forgot');
+                setError('');
+              }}>
+              Forgot password?
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="ghost"
+              style={{ fontSize: '13px', color: 'var(--muted)' }}
+              onClick={() => {
+                setMode('login');
+                setError('');
+              }}>
+              ← Back to Sign in
+            </button>
+          )}
+        </div>
       </form>
     </main>
   );

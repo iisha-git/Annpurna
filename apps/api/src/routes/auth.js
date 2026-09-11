@@ -55,7 +55,8 @@ router.post('/signup', async (req, res, next) => {
     if (norm(student.name) !== norm(name)) {
       return res.status(400).json({ error: "Name doesn't match mess records. Check spelling." });
     }
-    if (!student.mobile || norm(student.mobile) !== norm(mobile)) {
+    const cleanDigits = (raw) => String(raw || '').replace(/\D/g, '');
+    if (!student.mobile || !cleanDigits(student.mobile).includes(mobile)) {
       return res.status(400).json({ error: "Mobile number doesn't match mess records." });
     }
 
@@ -99,6 +100,94 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ error: 'Wrong mess number or password.' });
     }
     res.json({ token: sign({ sub: student._id, role: 'student' }), user: studentView(student) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/auth/reset-password — student resets password using mess number + registered mobile.
+ * body: { messNumber, mobile, newPassword }
+ */
+router.post('/reset-password', async (req, res, next) => {
+  try {
+    const mess = String(req.body.messNumber || '').trim();
+    const mobile = String(req.body.mobile || '').replace(/\D/g, '');
+    const newPassword = String(req.body.newPassword || '');
+
+    if (!mess) return res.status(400).json({ error: 'Enter your mess number.' });
+    if (mobile.length !== 10) {
+      return res.status(400).json({ error: "Enter your 10-digit registered mobile number." });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password needs at least 6 characters.' });
+    }
+
+    const student = await Student.findById(mess).select('+passwordHash');
+    if (!student || student.active === false) {
+      return res.status(404).json({ error: `Mess number "${mess}" is not on the mess records.` });
+    }
+    if (!student.claimed) {
+      return res.status(400).json({ error: 'Your account has not been set up yet. Please click Create account instead.' });
+    }
+
+    // Check if mobile matches registered records
+    const cleanDigits = (raw) => String(raw || '').replace(/\D/g, '');
+    const registeredMobile = cleanDigits(student.mobile);
+    if (!registeredMobile.includes(mobile)) {
+      return res.status(400).json({ error: 'Mobile number does not match mess office records for this student.' });
+    }
+
+    student.passwordHash = await bcrypt.hash(newPassword, 10);
+    await student.save();
+
+    const saved = student.toObject({ select: false });
+    return res.json({
+      success: true,
+      message: 'Password reset successfully!',
+      token: sign({ sub: saved._id, role: 'student' }),
+      user: studentView(saved),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/auth/owner/reset-password — owner resets password using email and secret key.
+ * body: { email, secretKey, newPassword }
+ */
+router.post('/owner/reset-password', async (req, res, next) => {
+  try {
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const secretKey = String(req.body.secretKey || '').trim();
+    const newPassword = String(req.body.newPassword || '');
+
+    if (!email || !secretKey || !newPassword) {
+      return res.status(400).json({ error: 'Email, recovery secret key, and new password are required.' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    }
+
+    if (secretKey !== JWT_SECRET) {
+      return res.status(401).json({ error: 'Invalid recovery secret key.' });
+    }
+
+    const owner = await Owner.findOne({ email });
+    if (!owner) {
+      return res.status(404).json({ error: 'Owner account not found.' });
+    }
+
+    owner.passwordHash = await bcrypt.hash(newPassword, 10);
+    await owner.save();
+
+    return res.json({
+      success: true,
+      message: 'Owner password reset successfully!',
+      token: sign({ sub: String(owner._id), role: 'owner' }),
+      user: { id: String(owner._id), role: 'owner', name: owner.name, email: owner.email },
+    });
   } catch (err) {
     next(err);
   }

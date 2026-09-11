@@ -50,13 +50,23 @@ export function AuthProvider({ children }) {
     setUser(u);
   }
 
+  async function resetPassword({ messNumber, mobile, newPassword }) {
+    const { token, user: u } = await api.post('/auth/reset-password', {
+      messNumber,
+      mobile,
+      newPassword,
+    });
+    await setToken(token);
+    setUser(u);
+  }
+
   async function signOut() {
     await clearToken();
     setUser(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, resetPassword, signOut }}>
       {children}
     </AuthContext.Provider>
   );
