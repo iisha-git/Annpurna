@@ -26,7 +26,7 @@ import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
  */
 export default function AuthScreen() {
   const { signIn, signUp, resetPassword } = useAuthSession();
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup' | 'forgot'
+  const [mode, setMode] = useState('signup'); // 'signup' | 'signin' | 'forgot'
   const [messNo, setMessNo] = useState('');
   const [fullName, setFullName] = useState('');
   const [mobile, setMobile] = useState('');
@@ -104,16 +104,16 @@ export default function AuthScreen() {
           {mode !== 'forgot' ? (
             <View style={styles.toggle}>
               <Pressable
-                style={[styles.toggleBtn, mode === 'signin' && styles.toggleOn]}
-                onPress={pickMode('signin')}>
-                <Text style={[styles.toggleTxt, mode === 'signin' && styles.toggleTxtOn]}>Sign in</Text>
-              </Pressable>
-              <Pressable
                 style={[styles.toggleBtn, mode === 'signup' && styles.toggleOn]}
                 onPress={pickMode('signup')}>
                 <Text style={[styles.toggleTxt, mode === 'signup' && styles.toggleTxtOn]}>
                   Create account
                 </Text>
+              </Pressable>
+              <Pressable
+                style={[styles.toggleBtn, mode === 'signin' && styles.toggleOn]}
+                onPress={pickMode('signin')}>
+                <Text style={[styles.toggleTxt, mode === 'signin' && styles.toggleTxtOn]}>Sign in</Text>
               </Pressable>
             </View>
           ) : (
