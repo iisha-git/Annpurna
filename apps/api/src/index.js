@@ -27,6 +27,7 @@ app.use(express.json());
 app.get('/', (_req, res) => res.json({
   status: 'online',
   service: 'Annpurna API',
+  version: '1.0.1',
   mode: process.env.VERCEL ? 'serverless' : 'standalone',
   health: '/api/health',
   timestamp: new Date().toISOString()
