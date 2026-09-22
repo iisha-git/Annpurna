@@ -1,0 +1,7 @@
+{
+  "name": "annpurna",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Root build complete'"
+  }
+}
