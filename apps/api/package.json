@@ -4,6 +4,7 @@
   "version": "1.0.1",
   "type": "module",
   "scripts": {
+    "build": "echo 'API build ready'",
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "seed": "node src/seed-cli.js",
