@@ -7,7 +7,7 @@ import { MessPresence } from '../models/MessPresence.js';
 
 const router = Router();
 
-const MIN_RESPONSES = 3;
+const MIN_RESPONSES = 1;
 const SEVERITY = ['LOW', 'MODERATE', 'HIGH'];
 
 /** POST /api/reviews/crowd — Submit a real-time crowd level. Limited to 1 per 30 mins. */

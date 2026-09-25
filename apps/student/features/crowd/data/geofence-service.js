@@ -70,12 +70,17 @@ function updateLocation(coords) {
   );
   currentDistance = dist;
 
-  const nowInside = dist !== null && dist <= messCoords.radiusMeters;
-  if (nowInside !== isInside) {
-    isInside = nowInside;
-    if (nowInside) {
-      enterMess();
-    } else {
+  // Only consider a fix valid for entry if accuracy is reasonable (<= 35m)
+  const isAccurate = coords.accuracy == null || coords.accuracy <= 35;
+  const nowInside = dist !== null && dist <= messCoords.radiusMeters && isAccurate;
+
+  if (nowInside && !isInside) {
+    isInside = true;
+    enterMess();
+  } else if (!nowInside) {
+    // If student is outside boundary (> 30m), guarantee leaveMess is called
+    if (isInside || (dist !== null && dist > messCoords.radiusMeters)) {
+      isInside = false;
       leaveMess();
     }
   }

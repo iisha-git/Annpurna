@@ -27,7 +27,31 @@ try {
       }
 
       if (eventType === Location.GeofencingEventType.Enter) {
-        console.log('[BackgroundGeofence] Entered mess region in background:', region.identifier);
+        console.log('[BackgroundGeofence] Region enter triggered. Verifying accurate fix...');
+        // Quick verification of distance to prevent noisy cell/wifi false alarm
+        try {
+          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          if (pos?.coords) {
+            const { latitude: lat1, longitude: lon1 } = pos.coords;
+            const { latitude: lat2, longitude: lon2 } = region;
+            const R = 6371e3;
+            const toRad = (d) => (d * Math.PI) / 180;
+            const a =
+              Math.sin(toRad(lat2 - lat1) / 2) ** 2 +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(toRad(lon2 - lon1) / 2) ** 2;
+            const dist = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+
+            // If actual distance is > 40m, ignore noisy false alarm
+            if (dist > 40) {
+              console.log('[BackgroundGeofence] Ignored false alarm: student is actually', dist, 'm away.');
+              return;
+            }
+          }
+        } catch {
+          // If quick fix times out, continue
+        }
+
+        console.log('[BackgroundGeofence] Verified inside mess region:', region.identifier);
         enterMess();
 
         try {
