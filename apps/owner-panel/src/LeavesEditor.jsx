@@ -295,6 +295,34 @@ export default function LeavesEditor() {
     }
   }
 
+  /* ── SMS invite ─────────────────────────────────────────────────────── */
+
+  const [invites, setInvites] = useState({}); // messNumber → 'sending' | 'sent'
+
+  async function inviteStudent(s) {
+    setInvites((p) => ({ ...p, [s.id]: 'sending' }));
+    try {
+      await api.post(`/students/${encodeURIComponent(s.id)}/invite`);
+      setInvites((p) => ({ ...p, [s.id]: 'sent' }));
+      setError('');
+      setTimeout(() => {
+        setInvites((p) => {
+          const next = { ...p };
+          delete next[s.id];
+          return next;
+        });
+      }, 6000);
+    } catch (err) {
+      setInvites((p) => {
+        const next = { ...p };
+        delete next[s.id];
+        return next;
+      });
+      setStatus('');
+      setError(`Invite failed: ${err.message}`);
+    }
+  }
+
   /* ── Leave toggle ───────────────────────────────────────────────────── */
 
   const [rangeFrom, setRangeFrom] = useState('');
@@ -675,9 +703,21 @@ export default function LeavesEditor() {
                             <b>{s.name}</b>
                             <small>#{s.messNumber}{s.room ? ` · ${s.room}` : ''}{s.branch ? ` · ${s.branch}` : ''}</small>
                           </span>
-                          <span className={`badge ${s.claimed ? 'good' : 'neutral'}`}>
-                            {s.claimed ? 'Linked' : 'Invite'}
-                          </span>
+                          {s.claimed ? (
+                            <span className="badge good">Linked</span>
+                          ) : invites[s.id] === 'sent' ? (
+                            <span className="badge good">SMS sent</span>
+                          ) : (
+                            <button
+                              className={`btn invite-btn${invites[s.id] === 'sending' ? ' disabled' : ''}`}
+                              disabled={invites[s.id] === 'sending'}
+                              onClick={(e) => { e.stopPropagation(); inviteStudent(s); }}
+                              title="SMS this student the app download + login steps"
+                            >
+                              <Icon name="sms" size={13} />
+                              {invites[s.id] === 'sending' ? 'Sending…' : 'Invite to app'}
+                            </button>
+                          )}
                           {confirming ? (
                             <span className="confirm-row">
                               <button className="btn btn-danger btn-xs" onClick={(e) => { e.stopPropagation(); removeEntry(s.id); }}>Remove</button>

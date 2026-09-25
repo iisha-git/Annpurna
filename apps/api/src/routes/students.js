@@ -3,6 +3,8 @@ import { Router } from 'express';
 import { requireAuth, requireOwner } from '../middleware/auth.js';
 import { Leave } from '../models/Leave.js';
 import { Student } from '../models/Student.js';
+import { WHATSAPP_TEMPLATE_NAME } from '../config.js';
+import { sendWhatsApp } from '../lib/whatsapp.js';
 
 const router = Router();
 
@@ -183,6 +185,33 @@ router.post('/:messNumber/restore', requireOwner, async (req, res, next) => {
     );
     if (!student) return res.status(404).json({ error: 'Not in the roster.' });
     res.json({ student: rosterView(student) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/students/:messNumber/invite — WhatsApp the student app download +
+ * signup instructions to that row's mobile number (owner only).
+ */
+router.post('/:messNumber/invite', requireOwner, async (req, res, next) => {
+  try {
+    const student = await Student.findById(String(req.params.messNumber));
+    if (!student || student.active === false) {
+      return res.status(404).json({ error: 'Not in the roster.' });
+    }
+
+    const { digits } = normalizeMobile(student.mobile);
+    if (!digits) {
+      return res.status(400).json({ error: 'No valid 10-digit mobile on file.' });
+    }
+
+    const result = await sendWhatsApp(digits, { name: student.name, messNumber: student._id });
+    if (!result.ok) {
+      return res.status(503).json({ error: result.message, code: result.code });
+    }
+
+    res.json({ sent: true, to: result.to, messageId: result.messageId, template: WHATSAPP_TEMPLATE_NAME });
   } catch (err) {
     next(err);
   }

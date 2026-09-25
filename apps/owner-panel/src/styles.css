@@ -664,6 +664,16 @@ select.field {
 .row-x:hover { background: var(--danger-soft); color: var(--danger); }
 .row-x.ok { background: var(--danger-soft); color: var(--danger); }
 
+.invite-btn {
+  justify-self: end;
+  padding: 6px 10px; font-size: 11.5px; border-radius: 8px; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--brand-ink); border-color: transparent;
+  color: #fff; cursor: pointer;
+}
+.invite-btn:hover:not(:disabled) { background: var(--brand); color: var(--brand-ink); }
+.invite-btn.disabled { cursor: not-allowed; }
+
 .confirm-row { justify-self: end; display: flex; align-items: center; gap: 6px; }
 .confirm-row .btn { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
 .btn-restore { justify-self: end; white-space: nowrap; }
