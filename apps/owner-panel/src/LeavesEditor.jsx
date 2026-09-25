@@ -592,7 +592,7 @@ export default function LeavesEditor() {
       {/* ── Roster + planner ── */}
       <div className="leaves-grid">
         {/* Left · Roster list */}
-        <section className="card">
+        <section className="card roster-card">
           <div className="card-head">
             <span className="hd">
               <span className="hd-chip tone-violet"><Icon name="users" size={16} /></span>
