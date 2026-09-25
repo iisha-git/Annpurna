@@ -918,8 +918,9 @@ export default function LeavesEditor() {
                   </div>
                 ) : (
                   <ul className="history-list">
-                    {history.map((g) => {
-                      const range = g.days.length === 1
+                    {historyGroups.map((g) => {
+                      const dayCount = g.days?.length || 1;
+                      const range = dayCount === 1
                         ? formatDay(g.start)
                         : `${formatShort(g.start)} – ${formatDay(g.end)}`;
                       const upcoming = g.end >= todayIso;
@@ -928,7 +929,7 @@ export default function LeavesEditor() {
                           <i className={`hdot ${g.type}`} />
                           <span className="hmeta">
                             <b>{range}</b>
-                            <small>{g.days.length} day{g.days.length === 1 ? '' : 's'} · {LEAVE_TYPE_LABELS[g.type] || 'Leave'}</small>
+                            <small>{dayCount} day{dayCount === 1 ? '' : 's'} · {LEAVE_TYPE_LABELS[g.type] || 'Leave'}</small>
                           </span>
                           {upcoming && <span className="badge neutral">Upcoming</span>}
                           <button className="btn btn-ghost btn-xs" title="Remove this leave" onClick={() => removeGroup(g)}>
