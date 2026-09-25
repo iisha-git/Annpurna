@@ -4,7 +4,7 @@
 
 // Demo controls on Home (simulate GPS entry, owner override).
 // Set to FALSE for production/clean view.
-export const SHOW_SIMULATION_TOOLS = false;
+export const SHOW_SIMULATION_TOOLS = true;
 
 /**
  * Mess Hall Geofence coordinates.
