@@ -11,6 +11,7 @@ const leaveSchema = new Schema(
   {
     messNumber: { type: String, required: true },
     date: { type: String, required: true }, // ISO "YYYY-MM-DD"
+    type: { type: String, enum: ['normal', 'holiday', 'prep'], default: 'normal' },
     markedAt: { type: Date, default: () => new Date() },
   },
   { versionKey: false }
