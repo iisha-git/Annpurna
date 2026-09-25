@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
-
 import { api } from './api';
 import { DAYS, DAY_LABELS, DEFAULT_WEEK, MEALS, MEAL_LABELS } from './menuData';
+import { FoodLoader, Icon } from './ui';
 
 /**
  * WEEK'S MENU EDITOR — one MongoDB menu doc ("current") holds the week.
- *
- * Editing model: each meal is a plain textarea, ONE DISH PER LINE. Simple
- * to build, fast for the owner, and parsing happens only on Save.
- * Students' phones poll the API and pick up changes.
+ * Editing model: each meal is a plain textarea, ONE DISH PER LINE. Students'
+ * phones poll the API and pick up changes.
  */
+
+const MEAL_ICON = { BREAKFAST: 'flame', LUNCH: 'wheat', SNACKS: 'star', DINNER: 'book' };
+const MEAL_TONE = {
+  BREAKFAST: 'tone-amber', LUNCH: 'tone-green', SNACKS: 'tone-violet', DINNER: 'tone-blue',
+};
 
 function textsFromWeek(week) {
   const t = {};
@@ -21,10 +24,43 @@ function textsFromWeek(week) {
   return t;
 }
 
+function statusMeta(status, loadedFromCloud) {
+  if (status === 'dirty') return { label: 'Unsaved changes', tone: 'dirty' };
+  if (status === 'saving') return { label: 'Saving…', tone: 'saving' };
+  if (status === 'saved') return { label: loadedFromCloud ? 'Saved — live on phones' : 'Saved (first publish)', tone: 'saved' };
+  if (status.startsWith('save-failed')) return { label: 'Save failed — try again', tone: 'error' };
+  if (status.startsWith('load-failed')) return { label: 'Offline — editing defaults', tone: 'error' };
+  if (loadedFromCloud) return { label: 'Loaded from server', tone: 'neutral' };
+  return { label: 'Defaults', tone: 'neutral' };
+}
+
+function MealCard({ meal, value, onChange }) {
+  const count = value.split('\n').filter((l) => l.trim()).length;
+  return (
+    <div className="meal">
+      <div className="meal-head">
+        <span className="meal-name">
+          <span className={`meal-dot ${MEAL_TONE[meal]}`}><Icon name={MEAL_ICON[meal]} size={15} /></span>
+          {MEAL_LABELS[meal]}
+        </span>
+        <span className="meal-count">{count} {count === 1 ? 'dish' : 'dishes'}</span>
+      </div>
+      <textarea
+        rows={Math.max(4, value.split('\n').length + 1)}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="One dish per line"
+        spellCheck={false}
+        aria-label={MEAL_LABELS[meal]}
+      />
+    </div>
+  );
+}
+
 export default function MenuEditor() {
   const [texts, setTexts] = useState(null); // null = still loading
   const [activeDay, setActiveDay] = useState('MON');
-  const [status, setStatus] = useState(''); // '' | 'dirty' | 'saving' | 'saved' | error msg
+  const [status, setStatus] = useState('');
   const [loadedFromCloud, setLoadedFromCloud] = useState(false);
 
   useEffect(() => {
@@ -36,13 +72,19 @@ export default function MenuEditor() {
         setTexts(textsFromWeek(week));
       })
       .catch((err) => {
-        // API unreachable — fall back to defaults, editable offline
         setStatus(`load-failed: ${err.message}`);
         setTexts(textsFromWeek(DEFAULT_WEEK));
       });
   }, []);
 
-  if (!texts) return <p className="muted">Loading menu…</p>;
+  if (!texts) {
+    return (
+      <div className="page-load" aria-live="polite">
+        <FoodLoader />
+        <p>Stirring today's menu…</p>
+      </div>
+    );
+  }
 
   function edit(key, value) {
     setTexts((prev) => ({ ...prev, [key]: value }));
@@ -51,7 +93,6 @@ export default function MenuEditor() {
 
   async function handleSave() {
     setStatus('saving');
-    /** @type {Record<string, Record<string, string[]>>} */
     const week = {};
     for (const day of DAYS) {
       week[day] = {};
@@ -75,56 +116,52 @@ export default function MenuEditor() {
     setStatus('dirty');
   }
 
+  const meta = statusMeta(status, loadedFromCloud);
+  const today = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+
   return (
     <section className="card">
-      <div className="editorHead">
-        <div>
-          <h2 style={{ marginBottom: 4 }}>This week's menu</h2>
-          <p className="muted" style={{ margin: 0 }}>
-            {status === 'dirty' && 'Unsaved changes'}
-            {status === 'saving' && 'Saving…'}
-            {status === 'saved' && `Saved ✓ — phones update shortly${loadedFromCloud ? '' : ' (first publish)'}`}
-            {status.startsWith('save-failed') && `Save failed: ${status}`}
-            {status.startsWith('load-failed') && `Couldn't reach the API (${status}) — editing local defaults.`}
-            {status === '' && loadedFromCloud && 'Loaded from the server'}
-          </p>
+      <div className="card-head">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <h3>This week's menu</h3>
+          <span className={`status-chip ${meta.tone}`}>{meta.label}</span>
         </div>
-        <div className="editorActions">
-          <button className="ghost dark" onClick={loadDefault}>Load default week</button>
+        <div className="toolbar-r">
+          <button className="btn btn-ghost" onClick={loadDefault}>
+            <Icon name="refresh" size={14} /> Load default week
+          </button>
           <button
-            className="primaryBtn"
+            className="btn btn-primary"
             onClick={handleSave}
             disabled={status === 'saving' || status === 'saved'}>
+            <Icon name="check" size={15} />
             {status === 'saving' ? 'Saving…' : 'Save changes'}
           </button>
         </div>
       </div>
 
-      {/* Day switcher */}
-      <div className="dayTabs">
+      <div className="daytabs" role="tablist" aria-label="Pick a day">
         {DAYS.map((d) => (
           <button
             key={d}
-            className={activeDay === d ? 'active' : ''}
+            role="tab"
+            aria-selected={activeDay === d}
+            className={`daytab ${activeDay === d ? 'active' : ''}`}
             onClick={() => setActiveDay(d)}>
             {DAY_LABELS[d].slice(0, 3)}
+            <small>{d === today ? 'Today' : DAY_LABELS[d].slice(0, 3)}</small>
           </button>
         ))}
       </div>
 
-      {/* Four meals for the active day */}
       <div className="meals">
         {MEALS.map((meal) => (
-          <label key={meal} className="mealBlock">
-            <span className="mealName">{MEAL_LABELS[meal]}</span>
-            <textarea
-              rows={Math.max(4, texts[`${activeDay}.${meal}`].split('\n').length + 1)}
-              value={texts[`${activeDay}.${meal}`]}
-              onChange={(e) => edit(`${activeDay}.${meal}`, e.target.value)}
-              placeholder={'One dish per line'}
-              spellCheck={false}
-            />
-          </label>
+          <MealCard
+            key={meal}
+            meal={meal}
+            value={texts[`${activeDay}.${meal}`]}
+            onChange={(v) => edit(`${activeDay}.${meal}`, v)}
+          />
         ))}
       </div>
     </section>

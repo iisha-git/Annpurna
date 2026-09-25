@@ -1,488 +1,102 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { api } from '../api';
+import React, { useState } from 'react';
 
-function getCurrentMonthKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
+import { Avatar, Icon } from '../ui';
 
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+const PENDING = [
+  { name: 'Kabir Singh', id: '24ME091', amount: '₹3,000', due: '05 Aug 2026' },
+  { name: 'Karan Malhotra', id: '24IT076', amount: '₹6,000', due: '05 Jul 2026' },
+  { name: 'Neha Gupta', id: '24CS188', amount: '₹3,000', due: '05 Aug 2026' },
 ];
 
 export default function Fees() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [view, setView] = useState('monthly');
+  const monthly = view === 'monthly';
 
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey);
-  const [monthlyFee, setMonthlyFee] = useState(3000);
-  const [editingFee, setEditingFee] = useState(false);
-  const [tempFee, setTempFee] = useState('3000');
-
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all'); // 'all' | 'pending' | 'paid'
-  const [page, setPage] = useState(1);
-  const pageSize = 50;
-
-  // Mark as Paid Modal
-  const [payingStudent, setPayingStudent] = useState(null);
-  const [paymentMode, setPaymentMode] = useState('UPI');
-  const [payAmount, setPayAmount] = useState('3000');
-  const [payBusy, setPayBusy] = useState(false);
-
-  // Month options (current year)
-  const monthOptions = useMemo(() => {
-    const year = new Date().getFullYear();
-    return Array.from({ length: 12 }, (_, i) => {
-      const m = String(i + 1).padStart(2, '0');
-      return {
-        key: `${year}-${m}`,
-        label: `${MONTH_NAMES[i]} ${year}`,
-      };
-    });
-  }, []);
-
-  const fetchFees = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const res = await api.get(`/fees?month=${selectedMonth}&fee=${monthlyFee}`);
-      setData(res);
-    } catch (err) {
-      setError(err.message || 'Failed to load fee records');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchFees();
-  }, [selectedMonth, monthlyFee]);
-
-  const handlePaySubmit = async (e) => {
-    e.preventDefault();
-    if (!payingStudent) return;
-    setPayBusy(true);
-    try {
-      await api.post('/fees/pay', {
-        messNumber: payingStudent.messNumber,
-        month: selectedMonth,
-        amount: Number(payAmount) || monthlyFee,
-        paymentMode,
-      });
-      setPayingStudent(null);
-      await fetchFees();
-    } catch (err) {
-      alert(`Could not record payment: ${err.message}`);
-    } finally {
-      setPayBusy(false);
-    }
-  };
-
-  const handleUnpay = async (student) => {
-    if (!window.confirm(`Revert payment status for ${student.name} (#${student.messNumber}) back to PENDING?`)) {
-      return;
-    }
-    try {
-      await api.post('/fees/unpay', {
-        messNumber: student.messNumber,
-        month: selectedMonth,
-      });
-      await fetchFees();
-    } catch (err) {
-      alert(`Could not revert payment: ${err.message}`);
-    }
-  };
-
-  const processedStudents = useMemo(() => {
-    const list = data?.students || [];
-    const q = search.trim().toLowerCase();
-
-    return list.filter((s) => {
-      if (filter === 'pending' && s.status !== 'PENDING') return false;
-      if (filter === 'paid' && s.status !== 'PAID') return false;
-
-      if (!q) return true;
-      return (
-        s.name?.toLowerCase().includes(q) ||
-        String(s.messNumber).includes(q) ||
-        s.room?.toLowerCase().includes(q) ||
-        s.mobile?.includes(q)
-      );
-    });
-  }, [data, search, filter]);
-
-  const totalPages = Math.max(1, Math.ceil(processedStudents.length / pageSize));
-  const paginated = processedStudents.slice((page - 1) * pageSize, page * pageSize);
-
-  const formatCurrency = (amt) =>
-    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt || 0);
+  const expected = monthly ? '₹14,58,000' : '₹1,74,96,000';
+  const collected = monthly ? '₹12,45,000' : '₹84,50,000';
+  const pending = monthly ? '₹2,13,000' : '₹90,46,000';
+  const rate = monthly ? '85%' : '48%';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Header controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <h2 style={{ margin: '0 0 4px 0' }}>Mess Fees Management</h2>
-          <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
-            Track and record monthly mess payments for all enrolled students
-          </span>
-        </div>
-
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {editingFee ? (
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <input
-                type="number"
-                value={tempFee}
-                onChange={(e) => setTempFee(e.target.value)}
-                style={{ width: '90px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border)' }}
-              />
-              <button
-                className="primaryBtn"
-                style={{ padding: '6px 12px', fontSize: '12px' }}
-                onClick={() => {
-                  setMonthlyFee(Number(tempFee) || 3000);
-                  setEditingFee(false);
-                }}
-              >
-                Save
-              </button>
-            </div>
-          ) : (
-            <button
-              className="ghost dark"
-              style={{ fontSize: '12px', padding: '7px 12px' }}
-              onClick={() => {
-                setTempFee(String(monthlyFee));
-                setEditingFee(true);
-              }}
-              title="Change standard monthly fee"
-            >
-              Fee: ₹{monthlyFee}/mo ✎
+    <div className="stack">
+      <div className="toolbar" style={{ marginBottom: 0 }}>
+        <div className="toolbar-l">
+          <div className="seg">
+            <button className={monthly ? 'active' : ''} onClick={() => setView('monthly')}>
+              Monthly overview
             </button>
-          )}
-
-          <select
-            value={selectedMonth}
-            onChange={(e) => {
-              setSelectedMonth(e.target.value);
-              setPage(1);
-            }}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              border: '1px solid var(--border)',
-              background: 'var(--surface)',
-              fontWeight: '600',
-              cursor: 'pointer',
-            }}
-          >
-            {monthOptions.map((m) => (
-              <option key={m.key} value={m.key}>{m.label}</option>
-            ))}
+            <button className={!monthly ? 'active' : ''} onClick={() => setView('annual')}>
+              Annual overview
+            </button>
+          </div>
+        </div>
+        <div className="toolbar-r">
+          <select className="field" style={{ width: 180 }} defaultValue={monthly ? 'Aug 2026' : '2026–27'}>
+            {monthly
+              ? <><option>Aug 2026</option><option>Jul 2026</option><option>Jun 2026</option></>
+              : <><option>2026–27</option><option>2025–26</option></>}
           </select>
-          <button className="ghost dark" onClick={fetchFees} title="Refresh fees">
-            ↻
-          </button>
         </div>
       </div>
 
-      {/* Dynamic Summary Cards */}
-      <div className="summary-cards" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-        <div className="summary-card">
-          <div className="summary-label">Expected Total</div>
-          <div className="summary-value">{formatCurrency(data?.expectedAmount)}</div>
-          <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px' }}>
-            Based on {formatCurrency(monthlyFee)} × {data?.totalStudents || 418} students
-          </div>
+      <div className="stats cols-3">
+        <div className="card card-pad">
+          <div className="stat-label">{monthly ? 'Expected this month' : 'Expected this year'}</div>
+          <div className="stat-value" style={{ marginTop: 6 }}>{expected}</div>
+          <div className="stat-delta flat">₹3,000 × 486 students</div>
         </div>
-
-        <div className="summary-card" style={{ background: '#e6f4ea', borderColor: '#cce5d3' }}>
-          <div className="summary-label" style={{ color: 'var(--success)' }}>Total Collected</div>
-          <div className="summary-value" style={{ color: 'var(--success)' }}>
-            {formatCurrency(data?.collectedAmount)}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--success)', marginTop: '8px', fontWeight: '600' }}>
-            {data?.paidCount || 0} students ({data?.percentCollected || 0}% collected)
-          </div>
+        <div className="card card-pad" style={{ borderColor: '#cde5d3' }}>
+          <div className="stat-label" style={{ color: 'var(--success)' }}>Total collected</div>
+          <div className="stat-value" style={{ marginTop: 6, color: 'var(--success)' }}>{collected}</div>
+          <span className="stat-delta up">{monthly ? '+ ₹3.2L vs last month' : 'Half-year run rate'}</span>
         </div>
-
-        <div className="summary-card" style={{ background: '#fce8e6', borderColor: '#f5c6cb' }}>
-          <div className="summary-label" style={{ color: 'var(--danger)' }}>Total Pending</div>
-          <div className="summary-value" style={{ color: 'var(--danger)' }}>
-            {formatCurrency(data?.pendingAmount)}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--danger)', marginTop: '8px', fontWeight: '600' }}>
-            {data?.pendingCount || 0} students pending
-          </div>
+        <div className="card card-pad" style={{ borderColor: '#f3cdc8' }}>
+          <div className="stat-label" style={{ color: 'var(--danger)' }}>Total pending</div>
+          <div className="stat-value" style={{ marginTop: 6, color: 'var(--danger)' }}>{pending}</div>
+          <span className="stat-delta down">{monthly ? '71 students' : rate + ' collected'}</span>
         </div>
       </div>
 
-      {/* Roster Payment Table */}
-      <div className="ui-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <h3 style={{ margin: 0 }}>Student Payment Records</h3>
-            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>({processedStudents.length} matching)</span>
+      <section className="card">
+        <div className="card-head">
+          <div>
+            <h3>Students with pending fees</h3>
+            <p className="sub">{monthly ? 'Dues for August 2026' : 'Dues for the academic year'}</p>
           </div>
-
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <input
-              type="text"
-              placeholder="Search by name, mess no..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                border: '1px solid var(--border)',
-                background: 'var(--paper)',
-                outline: 'none',
-                minWidth: '200px',
-              }}
-            />
-            <select
-              value={filter}
-              onChange={(e) => {
-                setFilter(e.target.value);
-                setPage(1);
-              }}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                border: '1px solid var(--border)',
-                background: 'var(--paper)',
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="all">All Students ({data?.totalStudents || 0})</option>
-              <option value="pending">Pending Only ({data?.pendingCount || 0})</option>
-              <option value="paid">Paid Only ({data?.paidCount || 0})</option>
-            </select>
-          </div>
+          <button className="btn btn-ghost btn-sm"><Icon name="send" size={13} /> Send reminders to all</button>
         </div>
-
-        {error && <p className="error" style={{ marginBottom: '16px' }}>{error}</p>}
-
-        {loading ? (
-          <p className="muted" style={{ padding: '32px 0', textAlign: 'center' }}>Loading student fee records…</p>
-        ) : (
-          <>
-            <div style={{ overflowX: 'auto' }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '80px' }}>Mess No</th>
-                    <th>Student Name</th>
-                    <th>Room</th>
-                    <th>Mobile</th>
-                    <th>Amount</th>
-                    <th>Payment Status</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginated.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: 'var(--muted)' }}>
-                        No students found matching your search / filter.
-                      </td>
-                    </tr>
-                  ) : (
-                    paginated.map((s) => {
-                      const isPaid = s.status === 'PAID';
-                      return (
-                        <tr key={s.messNumber}>
-                          <td style={{ fontWeight: '700', color: 'var(--amber-pressed)' }}>#{s.messNumber}</td>
-                          <td style={{ fontWeight: '600' }}>{s.name}</td>
-                          <td>{s.room}</td>
-                          <td className="muted">{s.mobile}</td>
-                          <td style={{ fontWeight: '700' }}>{formatCurrency(s.amount)}</td>
-                          <td>
-                            <span className={`status-badge ${isPaid ? 'good' : 'low'}`}>
-                              {isPaid ? `Paid (${s.paymentMode || 'UPI'})` : 'Pending'}
-                            </span>
-                          </td>
-                          <td style={{ textAlign: 'right' }}>
-                            {isPaid ? (
-                              <button
-                                className="ghost"
-                                style={{ fontSize: '12px', color: 'var(--muted)', padding: '4px 8px' }}
-                                onClick={() => handleUnpay(s)}
-                                title="Revert back to pending"
-                              >
-                                Revert ↺
-                              </button>
-                            ) : (
-                              <button
-                                className="primaryBtn"
-                                style={{ padding: '5px 14px', fontSize: '12px', borderRadius: '6px' }}
-                                onClick={() => {
-                                  setPayingStudent(s);
-                                  setPayAmount(String(s.amount || monthlyFee));
-                                }}
-                              >
-                                Mark as Paid
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', fontSize: '13px', color: 'var(--muted)' }}>
-                <div>
-                  Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, processedStudents.length)} of {processedStudents.length} students
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    className="ghost dark"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    style={{ padding: '6px 14px', fontSize: '13px' }}
-                  >
-                    Previous
-                  </button>
-                  <span style={{ alignSelf: 'center', fontWeight: '600', color: 'var(--ink)' }}>
-                    {page} / {totalPages}
-                  </span>
-                  <button
-                    className="ghost dark"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    style={{ padding: '6px 14px', fontSize: '13px' }}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* ── Modal: Record Payment ── */}
-      {payingStudent && (
-        <div style={modalOverlayStyle}>
-          <div style={modalBoxStyle}>
-            <h3 style={{ margin: '0 0 14px 0', color: 'var(--ink)' }}>
-              Record Fee Payment: {payingStudent.name}
-            </h3>
-            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--muted)' }}>
-              Mess Number #{payingStudent.messNumber} • Room {payingStudent.room}
-            </p>
-            <form onSubmit={handlePaySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={labelStyle}>Amount Paid (₹) *</label>
-                <input
-                  type="number"
-                  required
-                  value={payAmount}
-                  onChange={(e) => setPayAmount(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Payment Method *</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {['UPI', 'Cash', 'Bank Transfer'].map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setPaymentMode(mode)}
-                      style={{
-                        flex: 1,
-                        padding: '10px 8px',
-                        borderRadius: '8px',
-                        border: '1px solid var(--border)',
-                        background: paymentMode === mode ? 'var(--dark)' : 'var(--paper)',
-                        color: paymentMode === mode ? 'var(--amber)' : 'var(--ink)',
-                        fontWeight: '700',
-                        fontSize: '13px',
-                      }}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-                <button
-                  type="button"
-                  className="ghost dark"
-                  onClick={() => setPayingStudent(null)}
-                  disabled={payBusy}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="primaryBtn"
-                  disabled={payBusy}
-                  style={{ padding: '10px 22px', borderRadius: '8px' }}
-                >
-                  {payBusy ? 'Recording…' : 'Confirm Paid'}
-                </button>
-              </div>
-            </form>
-          </div>
+        <div className="table-wrap" style={{ padding: '4px 22px 22px' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>ID</th>
+                <th>Pending Amount</th>
+                <th>Due Date</th>
+                <th style={{ textAlign: 'right' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {PENDING.map((p) => (
+                <tr key={p.id}>
+                  <td>
+                    <span className="cell-main">
+                      <Avatar name={p.name} size={32} plain />
+                      <b>{p.name}</b>
+                    </span>
+                  </td>
+                  <td className="cell-sub">{p.id}</td>
+                  <td className="cell-amt" style={{ color: 'var(--danger)' }}>{p.amount}</td>
+                  <td className="cell-sub">{p.due}</td>
+                  <td style={{ textAlign: 'right' }}>
+                    <button className="btn btn-sm"><Icon name="send" size={13} /> Remind</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+      </section>
     </div>
   );
 }
-
-const modalOverlayStyle = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: 'rgba(0, 0, 0, 0.45)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000,
-  padding: '16px',
-};
-
-const modalBoxStyle = {
-  background: 'var(--surface)',
-  borderRadius: '16px',
-  padding: '24px',
-  width: '100%',
-  maxWidth: '460px',
-  boxShadow: '0 12px 36px rgba(0, 0, 0, 0.2)',
-  border: '1px solid var(--border)',
-};
-
-const labelStyle = {
-  display: 'block',
-  fontSize: '12px',
-  fontWeight: '700',
-  color: 'var(--muted)',
-  marginBottom: '4px',
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '9px 12px',
-  borderRadius: '8px',
-  border: '1px solid var(--border)',
-  background: 'var(--paper)',
-  outline: 'none',
-  fontSize: '14px',
-  boxSizing: 'border-box',
-};
