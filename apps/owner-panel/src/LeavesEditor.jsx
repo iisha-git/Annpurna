@@ -475,7 +475,7 @@ export default function LeavesEditor() {
     for (const { iso, type } of history) {
       const last = groups[groups.length - 1];
       if (last && last.type === type) {
-        const prev = new Date(`${last.end}T00:00:00`);
+        const prev = new Date(`${last.days[last.days.length - 1]}T00:00:00`);
         const cur = new Date(`${iso}T00:00:00`);
         if ((prev - cur) / 86400000 === 1) {
           last.days.push(iso);
