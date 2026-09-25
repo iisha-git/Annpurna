@@ -11,8 +11,8 @@ export const SHOW_SIMULATION_TOOLS = false;
  * Default radius in meters where student is considered inside the mess.
  */
 export const DEFAULT_MESS_COORDINATES = {
-  latitude: 18.5204, // Default college campus / hostel mess latitude
-  longitude: 73.8567, // Default college campus / hostel mess longitude
-  radiusMeters: 40,   // 40m radius around the mess hall
+  latitude: 19.616671066282116, // College hostel mess latitude
+  longitude: 74.18486872523384, // College hostel mess longitude
+  radiusMeters: 30,             // 30m radius around the mess hall
 };
 
