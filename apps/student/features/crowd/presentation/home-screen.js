@@ -32,7 +32,7 @@ export default function HomeScreen() {
   const { streak } = useStreak();
   const insets = useSafeAreaInsets(); // absolute children ignore SafeArea padding
   const [promptClosed, setPromptClosed] = useState(false);
-  const [devOpen, setDevOpen] = useState(false);
+  const [devOpen, setDevOpen] = useState(true);
 
   useEffect(() => {
     if (!snap.hasActiveVisit) setPromptClosed(false);
@@ -109,6 +109,18 @@ export default function HomeScreen() {
           )}
         </View>
 
+        {/* ── Simulation & Geofence controls (always visible when enabled) ── */}
+        {SHOW_SIMULATION_TOOLS && (
+          <View style={styles.devArea}>
+            <Pressable onPress={() => setDevOpen((v) => !v)} hitSlop={8}>
+              <Text style={styles.devToggle}>
+                {devOpen ? '▾' : '▸'} 🧪 DEV GEOFENCE & SIMULATION TOOLS
+              </Text>
+            </Pressable>
+            {devOpen && <SimulationPanel snap={snap} geofence={geofence} />}
+          </View>
+        )}
+
         <View style={styles.sectionCaption}>
           <DoodleBowl size={22} color={colors.accent} />
           <AppText variant="caption" style={{ flex: 1 }}>
@@ -122,18 +134,6 @@ export default function HomeScreen() {
 
         {snap.canSubmitFeedback && !snap.feedbackPending && promptClosed && (
           <PressableChip label="Answer the crowd check-in" onPress={() => setPromptClosed(false)} />
-        )}
-
-        {/* ── Simulation & Geofence controls (demo builds) ── */}
-        {SHOW_SIMULATION_TOOLS && (
-          <View style={styles.devArea}>
-            <Pressable onPress={() => setDevOpen((v) => !v)} hitSlop={8}>
-              <Text style={styles.devToggle}>
-                {devOpen ? '▾' : '▸'} DEV GEOFENCE & SIMULATION TOOLS
-              </Text>
-            </Pressable>
-            {devOpen && <SimulationPanel snap={snap} geofence={geofence} />}
-          </View>
         )}
       </ScrollView>
 
@@ -279,32 +279,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   devArea: {
-    marginTop: spacing.xl,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
     borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: colors.border,
+    borderStyle: 'solid',
+    borderColor: '#FFB13D',
+    backgroundColor: 'rgba(255, 177, 61, 0.08)',
     borderRadius: 16,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
   },
   devToggle: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
     letterSpacing: 0.5,
-    color: colors.textMuted,
+    color: '#D97706',
   },
   chip: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#F59E0B',
     borderRadius: radii.pill,
     paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    backgroundColor: colors.surface,
+    paddingVertical: 8,
+    backgroundColor: '#FFFBEB',
   },
   chipText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: colors.textMuted,
+    fontWeight: '700',
+    color: '#B45309',
   },
   geofenceWrap: {
     flexDirection: 'row',
