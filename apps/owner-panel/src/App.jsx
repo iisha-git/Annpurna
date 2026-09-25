@@ -245,9 +245,9 @@ function Shell({ user, booting = false, onSignOut }) {
 
         <div className="sidebar-foot">
           <span className="user-tile">
-            <Avatar name={user.email || 'O'} size={36} />
+            <Avatar name={user?.email || 'O'} size={36} />
             <span>
-              <span className="user-name">{user.email || 'Owner'}</span>
+              <span className="user-name">{user?.email || (booting ? 'Loading…' : 'Owner')}</span>
               <br />
               <span className="crown">Owner</span>
             </span>
