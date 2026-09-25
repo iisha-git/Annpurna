@@ -70,8 +70,18 @@ export default function CrowdCard({ status }) {
         ))}
       </View>
 
+      {/* Live Geofence Headcount */}
+      <View style={styles.headcountBadge}>
+        <MaterialCommunityIcons name="account-group" size={17} color={colors.accent} />
+        <AppText style={styles.headcountText}>
+          {status?.headcount != null
+            ? `${status.headcount} student${status.headcount === 1 ? '' : 's'} inside mess now`
+            : '0 students inside mess now'}
+        </AppText>
+      </View>
+
       {/* The ONLY sentence we allow ourselves */}
-      <AppText variant="title" style={{ marginTop: spacing.md, fontSize: 15 }}>
+      <AppText variant="title" style={{ marginTop: spacing.sm, fontSize: 15 }}>
         {SHORT_TAKE[level] ?? SHORT_TAKE.NONE}
       </AppText>
     </Card>
@@ -132,5 +142,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 2,
     marginTop: 12,
+  },
+  headcountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFF6E8',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginTop: 12,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#FFE2B8',
+  },
+  headcountText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#8A4A00',
   },
 });

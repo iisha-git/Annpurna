@@ -31,12 +31,22 @@ export function subscribe(listener) {
 
   // Poll every 10s
   const timer = setInterval(fetchStatus, 10000);
+
+  // Heartbeat every 60s while inside mess
+  const heartbeatTimer = setInterval(() => {
+    if (hasActiveVisit) {
+      api.post('/presence/heartbeat').catch(() => {});
+    }
+  }, 60000);
   
   listener(getSnapshot());
   
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0) clearInterval(timer);
+    if (listeners.size === 0) {
+      clearInterval(timer);
+      clearInterval(heartbeatTimer);
+    }
   };
 }
 
@@ -59,12 +69,24 @@ export function enterMess() {
   hasActiveVisit = true;
   feedbackPending = true;
   emit();
+  api.post('/presence/enter').then((res) => {
+    if (res?.count !== undefined) {
+      status = { ...status, headcount: res.count };
+      emit();
+    }
+  }).catch(() => {});
 }
 
 export function leaveMess() {
   hasActiveVisit = false;
   feedbackPending = false;
   emit();
+  api.post('/presence/leave').then((res) => {
+    if (res?.count !== undefined) {
+      status = { ...status, headcount: res.count };
+      emit();
+    }
+  }).catch(() => {});
 }
 
 export async function submitFeedback(level) {

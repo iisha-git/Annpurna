@@ -12,6 +12,7 @@ import reviewRoutes from './routes/reviews.js';
 import workerRoutes from './routes/workers.js';
 import inventoryRoutes from './routes/inventory.js';
 import feeRoutes from './routes/fees.js';
+import presenceRoutes from './routes/presence.js';
 
 const app = express();
 
@@ -94,6 +95,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/fees', feeRoutes);
+app.use('/api/presence', presenceRoutes);
 
 // 404 handler
 app.use((_req, res) => res.status(404).json({ error: 'Not found.' }));

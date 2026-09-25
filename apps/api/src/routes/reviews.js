@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { requireAuth, requireOwner } from '../middleware/auth.js';
 import { CrowdReport } from '../models/CrowdReport.js';
 import { GeneralReview } from '../models/GeneralReview.js';
+import { MessPresence } from '../models/MessPresence.js';
 
 const router = Router();
 
@@ -36,15 +37,24 @@ router.post('/crowd', requireAuth, async (req, res, next) => {
   }
 });
 
-/** GET /api/reviews/crowd-status — The calculator. Averages fresh reports. */
+/** GET /api/reviews/crowd-status — The calculator. Averages fresh reports and provides live headcount. */
 router.get('/crowd-status', async (_req, res, next) => {
   try {
     const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
-    const recentReports = await CrowdReport.find({ createdAt: { $gte: thirtyMinsAgo } }).lean();
+    const [recentReports, headcount] = await Promise.all([
+      CrowdReport.find({ createdAt: { $gte: thirtyMinsAgo } }).lean(),
+      MessPresence.countDocuments().catch(() => 0),
+    ]);
 
     if (recentReports.length < MIN_RESPONSES) {
       return res.json({ 
-        status: { level: null, origin: 'AUTOMATIC', responseCount: recentReports.length, updatedAt: new Date() } 
+        status: {
+          level: null,
+          origin: 'AUTOMATIC',
+          responseCount: recentReports.length,
+          headcount,
+          updatedAt: new Date()
+        } 
       });
     }
 
@@ -56,7 +66,13 @@ router.get('/crowd-status', async (_req, res, next) => {
     const winner = [...SEVERITY].reverse().find((lvl) => counts[lvl] === maxCount);
 
     res.json({ 
-      status: { level: winner, origin: 'AUTOMATIC', responseCount: recentReports.length, updatedAt: new Date() } 
+      status: {
+        level: winner,
+        origin: 'AUTOMATIC',
+        responseCount: recentReports.length,
+        headcount,
+        updatedAt: new Date()
+      } 
     });
   } catch (err) {
     next(err);

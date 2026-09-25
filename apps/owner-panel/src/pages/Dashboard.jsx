@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { api } from '../api';
 import { Avatar, Icon, Stars } from '../ui';
 
 const CROWD = {
@@ -28,7 +29,30 @@ const REVIEWS = [
 
 export default function Dashboard({ onNavigate }) {
   const [crowdLevel, setCrowdLevel] = useState('MODERATE');
+  const [headcount, setHeadcount] = useState(0);
+  const [crowdStatus, setCrowdStatus] = useState(null);
   const crowd = CROWD[crowdLevel];
+
+  useEffect(() => {
+    let alive = true;
+    const fetchStatus = () => {
+      api
+        .get('/reviews/crowd-status')
+        .then((res) => {
+          if (!alive) return;
+          if (res?.status?.level) setCrowdLevel(res.status.level);
+          if (res?.status?.headcount !== undefined) setHeadcount(res.status.headcount);
+          setCrowdStatus(res?.status);
+        })
+        .catch(() => {});
+    };
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 8000);
+    return () => {
+      alive = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <div className="stack">
@@ -71,12 +95,16 @@ export default function Dashboard({ onNavigate }) {
       {/* ── Live hero: crowd + attendance ── */}
       <section className="card card-dark hero-dash">
         <div className="hero-zone crowd-zone">
-          <span className="hero-eyebrow"><i className="live-dot" />Live mess crowd</span>
+          <span className="hero-eyebrow"><i className="live-dot" />Live mess crowd & presence</span>
           <div className="crowd-status-lg" style={{ color: crowd.color, textShadow: `0 14px 48px ${crowd.glow}` }}>
             {crowdLevel}
           </div>
-          <div className="crowd-meta">{crowd.label}</div>
-          <div className="crowd-updated">Based on 186 student responses · updated 12 min ago</div>
+          <div className="crowd-meta">
+            <b>{headcount}</b> student{headcount === 1 ? '' : 's'} inside right now (GPS Geofence)
+          </div>
+          <div className="crowd-updated">
+            {crowdStatus?.responseCount ? `${crowdStatus.responseCount} student reviews` : 'Awaiting feedback'} · {crowd.label}
+          </div>
 
           <div className="crowd-meter"><i style={{ width: crowd.meter }} /></div>
 
