@@ -297,7 +297,7 @@ export function setMessCoordinates(newCoords) {
 export async function setMessToCurrentLocation() {
   if (!currentCoords) {
     try {
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
       if (loc?.coords) {
         currentCoords = loc.coords;
       }

@@ -19,6 +19,7 @@ const studentView = (s) => ({
   year: s.year || null,
   branch: s.branch || null,
   room: s.room || null,
+  mobile: s.mobile || null,
   role: 'student',
 });
 

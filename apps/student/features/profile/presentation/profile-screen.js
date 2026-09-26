@@ -12,6 +12,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { initialsFor } from '../domain/profile-model';
 import { useProfile } from './use-profile';
 import StreakCard from '../../streak/presentation/streak-card';
+import IshaDeveloperCard from './isha-developer-card';
+import { isIshaSingh } from '@/shared/lib/is-isha-singh';
 import { AppText, Screen } from '@/shared/ui';
 import { DoodleSparkles } from '@/shared/ui/doodles/Doodles';
 import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
@@ -101,6 +103,9 @@ export default function ProfileScreen() {
 
       {/* Crowd check-in streak */}
       <StreakCard />
+
+      {/* Exclusive Developer & Geofence controls for Isha Singh */}
+      {isIshaSingh(student) && <IshaDeveloperCard student={student} />}
 
       {/* Good to know — scannable tiles instead of a wall of text */}
       <View style={styles.knowWrap}>

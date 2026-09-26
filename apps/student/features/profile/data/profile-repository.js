@@ -16,6 +16,7 @@ function toProfileView(s) {
     messNumber: s.messNumber,
     course: course || '—',
     room: s.room || '—',
+    mobile: s.mobile || null,
   };
 }
 

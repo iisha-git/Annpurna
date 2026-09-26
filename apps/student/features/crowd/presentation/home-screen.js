@@ -16,6 +16,7 @@ import { AppText } from '@/shared/ui';
 import { DoodleBowl, DoodleFlame } from '@/shared/ui/doodles/Doodles';
 import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
 import { SHOW_SIMULATION_TOOLS } from '@/shared/lib/config';
+import { isIshaSingh } from '@/shared/lib/is-isha-singh';
 
 const MASCOT = require('@/assets/images/moscot.png');
 
@@ -39,6 +40,7 @@ export default function HomeScreen() {
   }, [snap.hasActiveVisit]);
 
   const firstName = student?.name?.split(' ')[0];
+  const isPrivileged = SHOW_SIMULATION_TOOLS || isIshaSingh(student);
 
   return (
     <View style={styles.page}>
@@ -109,12 +111,12 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* ── Simulation & Geofence controls (always visible when enabled) ── */}
-        {SHOW_SIMULATION_TOOLS && (
+        {/* ── Simulation & Geofence controls (visible exclusively for Isha Singh or dev) ── */}
+        {isPrivileged && (
           <View style={styles.devArea}>
             <Pressable onPress={() => setDevOpen((v) => !v)} hitSlop={8}>
               <Text style={styles.devToggle}>
-                {devOpen ? '▾' : '▸'} 🧪 DEV GEOFENCE & SIMULATION TOOLS
+                {devOpen ? '▾' : '▸'} 👑 ISHA'S GEOFENCE & DEV TOOLS
               </Text>
             </Pressable>
             {devOpen && <SimulationPanel snap={snap} geofence={geofence} />}
@@ -177,6 +179,14 @@ function SimulationPanel({ snap, geofence }) {
         label="Set Mess to My GPS"
         accent
         onPress={() => geofence?.setMessToCurrentLocation?.()}
+      />
+      <Chip
+        label={`Radius: ${geofence?.messCoords?.radiusMeters || 10}m ▾`}
+        onPress={() => {
+          const current = geofence?.messCoords?.radiusMeters || 10;
+          const next = current === 10 ? 25 : current === 25 ? 50 : 10;
+          geofence?.setMessCoordinates?.({ radiusMeters: next });
+        }}
       />
       <Chip
         label={geofence?.backgroundStatus === 'active' ? 'Stop 24/7 Background' : 'Start 24/7 Background'}
