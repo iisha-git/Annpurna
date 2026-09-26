@@ -1,16 +1,22 @@
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as Notifications from 'expo-notifications';
-import { DEFAULT_MESS_COORDINATES } from '@/shared/lib/config';
+import { MESS_GEOFENCE_ZONES, DEFAULT_MESS_COORDINATES } from '@/shared/lib/config';
 import { enterMess, leaveMess } from './crowd-repository';
 import { GEOFENCE_BACKGROUND_TASK } from './background-geofence-task';
 
 /**
  * GEOFENCE SERVICE
  * Tracks student's GPS position in relation to the Mess Hall perimeter.
+ * Supports multi-zone geofencing — student is considered inside the mess
+ * if they are within the radius of ANY configured zone.
  * Supports both live Foreground position watching and 24/7 OS-level Background Geofencing.
  */
 
+/** All configured mess geofence zones */
+let messZones = MESS_GEOFENCE_ZONES.map((z) => ({ ...z }));
+
+/** Backward-compat reference — points to primary zone */
 let messCoords = { ...DEFAULT_MESS_COORDINATES };
 let currentCoords = null;
 let currentDistance = null;
@@ -55,6 +61,33 @@ function emit() {
   listeners.forEach((fn) => fn(snap));
 }
 
+/**
+ * Returns the shortest distance (in meters) from the given coords to ANY mess zone.
+ * Also returns which zone is closest.
+ */
+function closestZoneDistance(lat, lon) {
+  let minDist = Infinity;
+  let closestZone = messZones[0];
+  for (const zone of messZones) {
+    const d = calculateDistanceMeters(lat, lon, zone.latitude, zone.longitude);
+    if (d !== null && d < minDist) {
+      minDist = d;
+      closestZone = zone;
+    }
+  }
+  return { distance: minDist === Infinity ? null : minDist, zone: closestZone };
+}
+
+/** Returns true if student is inside the radius of ANY configured mess zone */
+function isInsideAnyZone(lat, lon, accuracy) {
+  const isAccurate = accuracy == null || accuracy <= 35;
+  if (!isAccurate) return false;
+  return messZones.some((zone) => {
+    const d = calculateDistanceMeters(lat, lon, zone.latitude, zone.longitude);
+    return d !== null && d <= zone.radiusMeters;
+  });
+}
+
 function updateLocation(coords) {
   currentCoords = {
     latitude: coords.latitude,
@@ -62,27 +95,18 @@ function updateLocation(coords) {
     accuracy: coords.accuracy,
   };
 
-  const dist = calculateDistanceMeters(
-    coords.latitude,
-    coords.longitude,
-    messCoords.latitude,
-    messCoords.longitude
-  );
-  currentDistance = dist;
+  // Distance to closest zone (used for UI display)
+  const { distance } = closestZoneDistance(coords.latitude, coords.longitude);
+  currentDistance = distance;
 
-  // Only consider a fix valid for entry if accuracy is reasonable (<= 35m)
-  const isAccurate = coords.accuracy == null || coords.accuracy <= 35;
-  const nowInside = dist !== null && dist <= messCoords.radiusMeters && isAccurate;
+  const nowInside = isInsideAnyZone(coords.latitude, coords.longitude, coords.accuracy);
 
   if (nowInside && !isInside) {
     isInside = true;
     enterMess();
-  } else if (!nowInside) {
-    // If student is outside boundary (> 30m), guarantee leaveMess is called
-    if (isInside || (dist !== null && dist > messCoords.radiusMeters)) {
-      isInside = false;
-      leaveMess();
-    }
+  } else if (!nowInside && isInside) {
+    isInside = false;
+    leaveMess();
   }
 
   emit();
@@ -139,21 +163,20 @@ export async function startBackgroundGeofencing() {
       /* ignore if fails on web */
     }
 
-    // 4. Register region with OS
+    // 4. Register all mess zones with the OS
     if (Location.startGeofencingAsync) {
-      await Location.startGeofencingAsync(GEOFENCE_BACKGROUND_TASK, [
-        {
-          identifier: 'annpurna_mess_hall',
-          latitude: messCoords.latitude,
-          longitude: messCoords.longitude,
-          radius: messCoords.radiusMeters || 40,
-          notifyOnEnter: true,
-          notifyOnExit: true,
-        },
-      ]);
+      const regions = messZones.map((zone) => ({
+        identifier: zone.identifier,
+        latitude: zone.latitude,
+        longitude: zone.longitude,
+        radius: zone.radiusMeters,
+        notifyOnEnter: true,
+        notifyOnExit: true,
+      }));
+      await Location.startGeofencingAsync(GEOFENCE_BACKGROUND_TASK, regions);
       backgroundStatus = 'active';
       errorMessage = null;
-      console.log('[Geofence] 24/7 background geofencing registered for 40m radius.');
+      console.log(`[Geofence] 24/7 background geofencing registered for ${regions.length} zones (${regions[0].radius}m radius each).`);
     } else {
       backgroundStatus = 'unsupported';
     }

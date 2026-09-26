@@ -7,12 +7,38 @@
 export const SHOW_SIMULATION_TOOLS = false;
 
 /**
- * Mess Hall Geofence coordinates.
- * Default radius in meters where student is considered inside the mess.
+ * Mess Hall Geofence zones.
+ * Each zone represents a GPS coordinate with a radius (in meters) within which
+ * a student is considered to be inside the mess hall.
+ * Being inside ANY of these zones counts as "in the mess".
+ */
+export const MESS_GEOFENCE_ZONES = [
+  {
+    identifier: 'annpurna_mess_zone_1',
+    latitude: 19.616525,
+    longitude: 74.184705,
+    radiusMeters: 10,
+  },
+  {
+    identifier: 'annpurna_mess_zone_2',
+    latitude: 19.616510,
+    longitude: 74.184647,
+    radiusMeters: 10,
+  },
+  {
+    identifier: 'annpurna_mess_zone_3',
+    latitude: 19.616528,
+    longitude: 74.184694,
+    radiusMeters: 10,
+  },
+];
+
+/**
+ * @deprecated Use MESS_GEOFENCE_ZONES instead.
+ * Kept for backward compatibility with any code referencing DEFAULT_MESS_COORDINATES.
  */
 export const DEFAULT_MESS_COORDINATES = {
-  latitude: 19.616671066282116, // College hostel mess latitude
-  longitude: 74.18486872523384, // College hostel mess longitude
-  radiusMeters: 30,             // 30m radius around the mess hall
+  ...MESS_GEOFENCE_ZONES[0],
+  radiusMeters: MESS_GEOFENCE_ZONES[0].radiusMeters,
 };
 
