@@ -1,6 +1,5 @@
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
-import * as Notifications from 'expo-notifications';
 import { MESS_GEOFENCE_ZONES, DEFAULT_MESS_COORDINATES } from '@/shared/lib/config';
 import { enterMess, leaveMess } from './crowd-repository';
 import { GEOFENCE_BACKGROUND_TASK } from './background-geofence-task';
@@ -41,7 +40,7 @@ export function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
     Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
     Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c);
+  return R * c; // full precision — critical for 10m zone boundary checks
 }
 
 export function getGeofenceSnapshot() {
@@ -272,7 +271,15 @@ export function stopGeofencing() {
 
 /** Update the target mess coordinates (e.g. for testing or config) */
 export function setMessCoordinates(newCoords) {
+  // Update ALL zones so foreground + background both use the new coordinates
+  messZones = messZones.map((zone) => ({
+    ...zone,
+    latitude: newCoords.latitude ?? zone.latitude,
+    longitude: newCoords.longitude ?? zone.longitude,
+    radiusMeters: newCoords.radiusMeters ?? zone.radiusMeters,
+  }));
   messCoords = { ...messCoords, ...newCoords };
+
   if (currentCoords) {
     updateLocation(currentCoords);
   } else {

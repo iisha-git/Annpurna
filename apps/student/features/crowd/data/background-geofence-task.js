@@ -3,7 +3,7 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import { enterMess, leaveMess } from './crowd-repository';
 
-export const GEOFENCE_BACKGROUND_TASK = 'ANNPUTNA_MESS_GEOFENCE_BACKGROUND_TASK';
+export const GEOFENCE_BACKGROUND_TASK = 'ANNPURNA_MESS_GEOFENCE_BACKGROUND_TASK';
 
 // Configure notification behavior for foreground/background
 Notifications.setNotificationHandler({
@@ -13,6 +13,16 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+/** Haversine — returns distance in meters between two GPS points */
+function haversineMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const a =
+    Math.sin(toRad(lat2 - lat1) / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(toRad(lon2 - lon1) / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 /**
  * Define the OS-level background geofence task.
@@ -32,18 +42,15 @@ try {
         try {
           const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
           if (pos?.coords) {
-            const { latitude: lat1, longitude: lon1 } = pos.coords;
-            const { latitude: lat2, longitude: lon2 } = region;
-            const R = 6371e3;
-            const toRad = (d) => (d * Math.PI) / 180;
-            const a =
-              Math.sin(toRad(lat2 - lat1) / 2) ** 2 +
-              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(toRad(lon2 - lon1) / 2) ** 2;
-            const dist = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+            const dist = haversineMeters(
+              pos.coords.latitude, pos.coords.longitude,
+              region.latitude, region.longitude
+            );
 
-            // If actual distance is > 15m, ignore noisy false alarm (zones are 10m radius)
-            if (dist > 15) {
-              console.log('[BackgroundGeofence] Ignored false alarm: student is actually', dist, 'm away.');
+            // Use the region's own radius + 5m margin for the false-alarm guard
+            const threshold = (region.radius || 10) + 5;
+            if (dist > threshold) {
+              console.log(`[BackgroundGeofence] Ignored false alarm: student is ${Math.round(dist)}m away (threshold: ${threshold}m).`);
               return;
             }
           }
@@ -69,7 +76,28 @@ try {
           console.warn('[BackgroundGeofence] Notification trigger error:', notifErr.message);
         }
       } else if (eventType === Location.GeofencingEventType.Exit) {
-        console.log('[BackgroundGeofence] Exited mess region in background:', region.identifier);
+        // With multiple zones, the OS fires Exit per-zone independently.
+        // Verify the student is actually outside ALL zones before calling leaveMess().
+        try {
+          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          if (pos?.coords) {
+            const { MESS_GEOFENCE_ZONES } = require('@/shared/lib/config');
+            const stillInside = MESS_GEOFENCE_ZONES.some((zone) => {
+              const d = haversineMeters(
+                pos.coords.latitude, pos.coords.longitude,
+                zone.latitude, zone.longitude
+              );
+              return d <= zone.radiusMeters;
+            });
+            if (stillInside) {
+              console.log('[BackgroundGeofence] Exited', region.identifier, 'but still inside another zone — skipping leaveMess.');
+              return;
+            }
+          }
+        } catch {
+          // If GPS check fails, fall through and leave — safer than staying stuck
+        }
+        console.log('[BackgroundGeofence] Exited all mess regions in background.');
         leaveMess();
       }
     });

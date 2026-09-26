@@ -13,6 +13,10 @@ let hasActiveVisit = false;
 let feedbackPending = false;
 let checkInDates = []; // Future: fetch from backend
 
+// Module-level timer refs — prevents leak on rapid subscribe/unsubscribe
+let activeTimer = null;
+let activeHeartbeatTimer = null;
+
 export function getSnapshot() {
   return {
     status,
@@ -26,26 +30,26 @@ export function getSnapshot() {
 export function subscribe(listener) {
   listeners.add(listener);
   
-  // Initial fetch
-  fetchStatus();
-
-  // Poll every 10s
-  const timer = setInterval(fetchStatus, 10000);
-
-  // Heartbeat every 60s while inside mess
-  const heartbeatTimer = setInterval(() => {
-    if (hasActiveVisit) {
-      api.post('/presence/heartbeat').catch(() => {});
-    }
-  }, 60000);
+  // Only start timers if this is the first listener
+  if (listeners.size === 1) {
+    fetchStatus();
+    activeTimer = setInterval(fetchStatus, 10000);
+    activeHeartbeatTimer = setInterval(() => {
+      if (hasActiveVisit) {
+        api.post('/presence/heartbeat').catch(() => {});
+      }
+    }, 60000);
+  }
   
   listener(getSnapshot());
   
   return () => {
     listeners.delete(listener);
     if (listeners.size === 0) {
-      clearInterval(timer);
-      clearInterval(heartbeatTimer);
+      clearInterval(activeTimer);
+      clearInterval(activeHeartbeatTimer);
+      activeTimer = null;
+      activeHeartbeatTimer = null;
     }
   };
 }
