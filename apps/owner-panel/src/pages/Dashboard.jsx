@@ -9,11 +9,7 @@ const CROWD = {
   HIGH: { color: '#e0472e', glow: 'rgba(224,71,46,0.45)', meter: '86%', label: 'Peak hour — suggest waiting 15 min' },
 };
 
-const LOW_STOCK = [
-  { name: 'Toor Dal', qty: '8 kg', pct: 16, unit: 'of ~50 kg ideal', icon: 'wheat' },
-  { name: 'Vegetables', qty: '18 kg', pct: 36, unit: 'of ~50 kg ideal', icon: 'package' },
-  { name: 'Milk', qty: '20 L', pct: 40, unit: 'of ~50 L ideal', icon: 'package' },
-];
+
 
 const DUE_STUDENTS = [
   { name: 'Kabir Singh', id: '24ME091', amount: '₹3,000', due: 'Due 5 Aug' },
@@ -32,6 +28,10 @@ export default function Dashboard({ onNavigate }) {
   const [headcount, setHeadcount] = useState(0);
   const [crowdStatus, setCrowdStatus] = useState(null);
   const crowd = CROWD[crowdLevel];
+
+  // Live inventory
+  const [lowStock, setLowStock] = useState([]);
+  const [basket, setBasket] = useState([]);
 
   useEffect(() => {
     let alive = true;
@@ -52,6 +52,24 @@ export default function Dashboard({ onNavigate }) {
       alive = false;
       clearInterval(interval);
     };
+  }, []);
+
+  // Fetch inventory + basket (refresh every 30 s)
+  useEffect(() => {
+    let alive = true;
+    const fetchInv = () => {
+      Promise.all([api.get('/inventory'), api.get('/inventory/basket')])
+        .then(([inv, bas]) => {
+          if (!alive) return;
+          const low = (inv.items || []).filter((i) => i.status === 'Low');
+          setLowStock(low);
+          setBasket(bas.basket || []);
+        })
+        .catch(() => {});
+    };
+    fetchInv();
+    const t = setInterval(fetchInv, 30000);
+    return () => { alive = false; clearInterval(t); };
   }, []);
 
   return (
@@ -224,29 +242,64 @@ export default function Dashboard({ onNavigate }) {
               <span className="hd-chip tone-amber"><Icon name="package" size={17} /></span>
               <div>
                 <h3>Low stock</h3>
-                <p>Restock these before the next meal</p>
+                <p>{lowStock.length > 0 ? `${lowStock.length} item${lowStock.length !== 1 ? 's' : ''} need restocking` : 'All items well stocked'}</p>
               </div>
             </span>
             <button className="link-btn" onClick={() => onNavigate('inventory')}>All stock <Icon name="arrowRight" size={13} /></button>
           </div>
-          <ul className="compact-list">
-            {LOW_STOCK.map((s) => (
-              <li className="compact-row" key={s.name}>
-                <span className="ava plain" style={{ width: 34, height: 34, fontSize: 15 }}>
-                  <Icon name={s.icon} size={15} />
-                </span>
-                <span className="who">
-                  <b>{s.name}</b>
-                  <small>{s.unit}</small>
-                </span>
-                <span className="stock-bar"><i style={{ width: `${s.pct}%`, background: s.pct < 20 ? 'var(--danger)' : 'var(--warn)' }} /></span>
-                <b className="price" style={{ color: s.pct < 20 ? 'var(--danger)' : 'var(--warn)' }}>{s.qty}</b>
-              </li>
-            ))}
-          </ul>
+          {lowStock.length === 0 ? (
+            <div style={{ padding: '18px 22px', color: 'var(--muted)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon name="checkCircle" size={16} style={{ color: 'var(--success)' }} /> No low-stock items right now.
+            </div>
+          ) : (
+            <ul className="compact-list">
+              {lowStock.slice(0, 5).map((s) => {
+                const pct = Math.min(100, Math.round((s.qty / ((s.minThreshold ?? 10) * 5)) * 100));
+                return (
+                  <li className="compact-row" key={s.id}>
+                    <span className="ava plain" style={{ width: 34, height: 34, fontSize: 15 }}>
+                      <Icon name={s.unit === 'L' ? 'package' : 'wheat'} size={15} />
+                    </span>
+                    <span className="who">
+                      <b>{s.item}</b>
+                      <small>Min {s.minThreshold ?? 10} {s.unit}</small>
+                    </span>
+                    <span className="stock-bar"><i style={{ width: `${pct}%`, background: pct < 20 ? 'var(--danger)' : 'var(--warn)' }} /></span>
+                    <b className="price" style={{ color: pct < 20 ? 'var(--danger)' : 'var(--warn)' }}>{s.qty} {s.unit}</b>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {basket.length > 0 && (
+            <>
+              <div style={{ borderTop: '1px solid var(--border)', margin: '0 22px', paddingTop: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name="shoppingCart" size={13} /> Today's Cart
+                  </span>
+                  <button className="link-btn" onClick={() => onNavigate('inventory')}>Edit <Icon name="arrowRight" size={11} /></button>
+                </div>
+                <ul className="compact-list" style={{ paddingBottom: 0 }}>
+                  {basket.slice(0, 4).map((b) => (
+                    <li className="compact-row" key={b.id} style={{ paddingTop: 6, paddingBottom: 6 }}>
+                      <span className="ava plain" style={{ width: 30, height: 30, fontSize: 13 }}>
+                        <Icon name="wheat" size={13} />
+                      </span>
+                      <span className="who"><b style={{ fontSize: 13 }}>{b.item}</b></span>
+                      <b className="price" style={{ color: 'var(--brand)', fontSize: 13 }}>{b.amount} {b.unit}</b>
+                    </li>
+                  ))}
+                  {basket.length > 4 && (
+                    <li style={{ padding: '4px 0', fontSize: 12, color: 'var(--muted)' }}>+{basket.length - 4} more…</li>
+                  )}
+                </ul>
+              </div>
+            </>
+          )}
           <div className="card-foot">
             <span className="att-pill" style={{ borderColor: 'transparent', background: 'transparent', padding: 0 }}>
-              <Icon name="truck" size={14} /> Next delivery tomorrow 8:00 am
+              <Icon name="truck" size={14} /> Cart resets daily at midnight
             </span>
           </div>
         </section>

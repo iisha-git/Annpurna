@@ -14,16 +14,7 @@ const DEFAULT_WORKERS = [
   { name: 'Anita Kumari', role: 'Kitchen Helper', salary: '₹13,500/month', mobile: '9823413456', status: 'Working' },
   { name: 'Suresh Babu', role: 'Assistant Cook', salary: '₹16,000/month', mobile: '9823417890', status: 'Working' },
 ];
-
-const DEFAULT_INVENTORY = [
-  { item: 'Basmati Rice', qty: 82, unit: 'kg', minThreshold: 20 },
-  { item: 'Toor Dal', qty: 8, unit: 'kg', minThreshold: 15 },
-  { item: 'Refined Oil', qty: 12, unit: 'L', minThreshold: 10 },
-  { item: 'Onions', qty: 18, unit: 'kg', minThreshold: 20 },
-  { item: 'Potatoes', qty: 45, unit: 'kg', minThreshold: 25 },
-  { item: 'Wheat Flour (Atta)', qty: 120, unit: 'kg', minThreshold: 30 },
-  { item: 'Milk', qty: 10, unit: 'L', minThreshold: 15 },
-];
+import { DEFAULT_INVENTORY } from './config/inventoryDefaults.js';
 
 /**
  * Idempotent startup seed:
