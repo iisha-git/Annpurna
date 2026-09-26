@@ -15,8 +15,8 @@ export const SHOW_SIMULATION_TOOLS = false;
 export const MESS_GEOFENCE_ZONES = [
   {
     identifier: 'annpurna_mess_zone_1',
-    latitude: 19.616525,
-    longitude: 74.184705,
+    latitude: 19.6166052,
+    longitude: 74.1841384,
     radiusMeters: 10,
   },
 ];
