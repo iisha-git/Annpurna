@@ -104,6 +104,17 @@ export async function submitFeedback(level) {
   }
 }
 
+/**
+ * Called when the student taps the crowd-review push notification.
+ * Re-surfaces the in-app feedback prompt even if they already dismissed it once.
+ */
+export function triggerFeedbackFromNotification() {
+  if (hasActiveVisit) {
+    feedbackPending = true;
+    emit();
+  }
+}
+
 // Stubs for simulation tools in home-screen.js
 export function setOwnerOverride(level) {}
 export function clearOwnerOverride() {}

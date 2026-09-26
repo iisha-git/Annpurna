@@ -41,8 +41,8 @@ try {
               Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(toRad(lon2 - lon1) / 2) ** 2;
             const dist = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 
-            // If actual distance is > 40m, ignore noisy false alarm
-            if (dist > 40) {
+            // If actual distance is > 15m, ignore noisy false alarm (zones are 10m radius)
+            if (dist > 15) {
               console.log('[BackgroundGeofence] Ignored false alarm: student is actually', dist, 'm away.');
               return;
             }
@@ -54,11 +54,12 @@ try {
         console.log('[BackgroundGeofence] Verified inside mess region:', region.identifier);
         enterMess();
 
+        // Ask the student for a crowd review — prompt appears when they tap the notification
         try {
           await Notifications.scheduleNotificationAsync({
             content: {
-              title: "You've arrived at Annpurna Mess! 🍲",
-              body: "How crowded is it right now? Tap to share live feedback with other students.",
+              title: "Quick! How crowded is the mess? 🍲",
+              body: "You're inside Annpurna Mess. Tap to tell others how busy it is right now — takes 2 seconds!",
               data: { action: 'crowd-feedback' },
               sound: true,
             },
