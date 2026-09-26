@@ -40,7 +40,7 @@ try {
         console.log('[BackgroundGeofence] Region enter triggered. Verifying accurate fix...');
         // Quick verification of distance to prevent noisy cell/wifi false alarm
         try {
-          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
           if (pos?.coords) {
             const dist = haversineMeters(
               pos.coords.latitude, pos.coords.longitude,

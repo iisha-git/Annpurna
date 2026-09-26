@@ -79,7 +79,8 @@ function closestZoneDistance(lat, lon) {
 
 /** Returns true if student is inside the radius of ANY configured mess zone */
 function isInsideAnyZone(lat, lon, accuracy) {
-  const isAccurate = accuracy == null || accuracy <= 35;
+  // Allow up to 60m horizontal accuracy to account for indoor GPS signal degradation
+  const isAccurate = accuracy == null || accuracy <= 60;
   if (!isAccurate) return false;
   return messZones.some((zone) => {
     const d = calculateDistanceMeters(lat, lon, zone.latitude, zone.longitude);
@@ -224,7 +225,7 @@ export async function startGeofencing() {
     // Get initial fix
     try {
       const initial = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.Highest,
       });
       if (initial?.coords) {
         updateLocation(initial.coords);
@@ -237,9 +238,9 @@ export async function startGeofencing() {
     if (!locationWatcher) {
       locationWatcher = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Balanced,
-          timeInterval: 5000,
-          distanceInterval: 5,
+          accuracy: Location.Accuracy.Highest,
+          timeInterval: 2000,
+          distanceInterval: 1,
         },
         (loc) => {
           if (loc?.coords) {
