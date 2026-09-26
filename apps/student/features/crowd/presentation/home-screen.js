@@ -95,8 +95,8 @@ export default function HomeScreen() {
             {geofence.permissionStatus !== 'granted'
               ? 'GPS permission needed for mess geofence'
               : geofence.isInside
-              ? 'Inside Mess Hall • Checkin active'
-              : `Outside Mess • ${geofence.distance != null ? `${Math.round(geofence.distance)}m away` : 'Locating…'}`}
+              ? `Inside Mess Hall • Checkin active${snap.status?.headcount != null ? ` (${snap.status.headcount} inside)` : ''}`
+              : `Outside Mess • ${geofence.distance != null ? `${Math.round(geofence.distance)}m away` : 'Locating…'}${snap.status?.headcount != null ? ` • ${snap.status.headcount} inside` : ''}`}
           </AppText>
           {geofence.permissionStatus !== 'granted' ? (
             <Pressable onPress={geofence.requestPermission} hitSlop={8}>

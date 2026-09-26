@@ -46,29 +46,30 @@ router.get('/crowd-status', async (_req, res, next) => {
       MessPresence.countDocuments().catch(() => 0),
     ]);
 
-    if (recentReports.length < MIN_RESPONSES) {
-      return res.json({ 
-        status: {
-          level: null,
-          origin: 'AUTOMATIC',
-          responseCount: recentReports.length,
-          headcount,
-          updatedAt: new Date()
-        } 
-      });
+    let level;
+    let origin = 'AUTOMATIC';
+
+    if (recentReports.length >= MIN_RESPONSES) {
+      const counts = { LOW: 0, MODERATE: 0, HIGH: 0 };
+      for (const r of recentReports) counts[r.level] += 1;
+      const maxCount = Math.max(...Object.values(counts));
+      level = [...SEVERITY].reverse().find((lvl) => counts[lvl] === maxCount);
+    } else {
+      // Physical geofence fallback: derive crowd level directly from live students inside mess
+      origin = 'GEOFENCE_PRESENCE';
+      if (headcount > 15) {
+        level = 'HIGH';
+      } else if (headcount > 5) {
+        level = 'MODERATE';
+      } else {
+        level = 'LOW';
+      }
     }
-
-    const counts = { LOW: 0, MODERATE: 0, HIGH: 0 };
-    for (const r of recentReports) counts[r.level] += 1;
-
-    const maxCount = Math.max(...Object.values(counts));
-    // Tie-break: pick the most severe level among those tied for max.
-    const winner = [...SEVERITY].reverse().find((lvl) => counts[lvl] === maxCount);
 
     res.json({ 
       status: {
-        level: winner,
-        origin: 'AUTOMATIC',
+        level,
+        origin,
         responseCount: recentReports.length,
         headcount,
         updatedAt: new Date()

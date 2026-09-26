@@ -41,7 +41,11 @@ export default function CrowdCard({ status }) {
       <View style={styles.headerRow}>
         <AppText variant="title">Mess crowd</AppText>
         <AppText variant="caption" style={{ fontSize: 11 }}>
-          {timeAgo(status?.updatedAt)} · {status?.responseCount ?? 0} responses
+          {status?.origin === 'GEOFENCE_PRESENCE'
+            ? 'Live GPS presence'
+            : status?.origin === 'OWNER_OVERRIDE'
+            ? 'Manager update'
+            : `${timeAgo(status?.updatedAt)} · ${status?.responseCount ?? 0} responses`}
         </AppText>
       </View>
 
@@ -51,11 +55,15 @@ export default function CrowdCard({ status }) {
         <AppText style={{ color: meta.color, fontWeight: '800', fontSize: 19 }}>
           {meta.label}
         </AppText>
-        {status?.origin === 'OWNER_OVERRIDE' && (
+        {status?.origin === 'OWNER_OVERRIDE' ? (
           <AppText variant="caption" style={{ marginLeft: 6 }} color={colors.accentPressed}>
             · set by manager
           </AppText>
-        )}
+        ) : status?.origin === 'GEOFENCE_PRESENCE' ? (
+          <AppText variant="caption" style={{ marginLeft: 6 }} color={colors.accentPressed}>
+            · live GPS count
+          </AppText>
+        ) : null}
       </View>
 
       {/* People meter — the visual IS the data */}
@@ -72,17 +80,28 @@ export default function CrowdCard({ status }) {
 
       {/* Live Geofence Headcount */}
       <View style={styles.headcountBadge}>
-        <MaterialCommunityIcons name="account-group" size={17} color={colors.accent} />
-        <AppText style={styles.headcountText}>
-          {status?.headcount != null
-            ? `${status.headcount} student${status.headcount === 1 ? '' : 's'} inside mess now`
-            : '0 students inside mess now'}
-        </AppText>
+        <View style={styles.headcountIconWrap}>
+          <MaterialCommunityIcons name="account-group" size={18} color="#FF9D00" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <AppText style={styles.headcountText}>
+            {status?.headcount != null && status.headcount > 0
+              ? `${status.headcount} student${status.headcount === 1 ? '' : 's'} inside mess right now`
+              : '0 students inside mess right now'}
+          </AppText>
+          <AppText variant="caption" style={styles.headcountSub}>
+            {status?.headcount != null && status.headcount > 0
+              ? 'Detected live via GPS geofencing'
+              : 'Mess hall is currently quiet'}
+          </AppText>
+        </View>
       </View>
 
       {/* The ONLY sentence we allow ourselves */}
       <AppText variant="title" style={{ marginTop: spacing.sm, fontSize: 15 }}>
-        {SHORT_TAKE[level] ?? SHORT_TAKE.NONE}
+        {status?.headcount === 0
+          ? 'Mess is empty right now — perfect time to eat'
+          : (SHORT_TAKE[level] ?? SHORT_TAKE.NONE)}
       </AppText>
     </Card>
   );
@@ -146,19 +165,31 @@ const styles = StyleSheet.create({
   headcountBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFF6E8',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    marginTop: 12,
-    alignSelf: 'flex-start',
+    gap: 10,
+    backgroundColor: '#FFF8EE',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginTop: 14,
     borderWidth: 1,
     borderColor: '#FFE2B8',
+  },
+  headcountIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFE9C7',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headcountText: {
     fontSize: 13,
     fontWeight: '700',
     color: '#8A4A00',
+  },
+  headcountSub: {
+    fontSize: 11,
+    color: '#B5742A',
+    marginTop: 1,
   },
 });
