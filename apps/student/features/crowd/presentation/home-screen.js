@@ -12,6 +12,7 @@ import TodayFoodCard from '../../menu/presentation/today-food-card';
 import { useStreak } from '../../streak/presentation/use-streak';
 import * as crowdRepository from '../data/crowd-repository';
 import { useProfile } from '../../profile/presentation/use-profile';
+import { useAuthSession } from '../../auth/presentation/use-auth-session';
 import { AppText } from '@/shared/ui';
 import { DoodleBowl, DoodleFlame } from '@/shared/ui/doodles/Doodles';
 import { colors, fonts, radii, spacing } from '@/shared/theme/tokens';
@@ -30,6 +31,7 @@ export default function HomeScreen() {
   const snap = useCrowdStatus();
   const geofence = useGeofence();
   const { student } = useProfile();
+  const { user } = useAuthSession();
   const { streak } = useStreak();
   const insets = useSafeAreaInsets(); // absolute children ignore SafeArea padding
   const [promptClosed, setPromptClosed] = useState(false);
@@ -39,8 +41,8 @@ export default function HomeScreen() {
     if (!snap.hasActiveVisit) setPromptClosed(false);
   }, [snap.hasActiveVisit]);
 
-  const firstName = student?.name?.split(' ')[0];
-  const isPrivileged = SHOW_SIMULATION_TOOLS || isIshaSingh(student);
+  const firstName = student?.name?.split(' ')[0] || user?.name?.split(' ')[0];
+  const isPrivileged = SHOW_SIMULATION_TOOLS || isIshaSingh(student) || isIshaSingh(user);
 
   return (
     <View style={styles.page}>

@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { initialsFor } from '../domain/profile-model';
 import { useProfile } from './use-profile';
+import { useAuthSession } from '../../auth/presentation/use-auth-session';
 import StreakCard from '../../streak/presentation/streak-card';
 import IshaDeveloperCard from './isha-developer-card';
 import { isIshaSingh } from '@/shared/lib/is-isha-singh';
@@ -26,6 +27,7 @@ const FADE = Array.from({ length: 22 }, (_, i) =>
 
 export default function ProfileScreen() {
   const { loading, student } = useProfile();
+  const { user } = useAuthSession();
   const insets = useSafeAreaInsets();
 
   if (loading) {
@@ -105,7 +107,9 @@ export default function ProfileScreen() {
       <StreakCard />
 
       {/* Exclusive Developer & Geofence controls for Isha Singh */}
-      {isIshaSingh(student) && <IshaDeveloperCard student={student} />}
+      {(isIshaSingh(student) || isIshaSingh(user)) && (
+        <IshaDeveloperCard student={student || user} />
+      )}
 
       {/* Good to know — scannable tiles instead of a wall of text */}
       <View style={styles.knowWrap}>
