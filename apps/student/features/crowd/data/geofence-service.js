@@ -1,5 +1,7 @@
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
+import * as FileSystem from 'expo-file-system/legacy';
+import { api } from '@/shared/lib/api';
 import { MESS_GEOFENCE_ZONES, DEFAULT_MESS_COORDINATES } from '@/shared/lib/config';
 import { enterMess, leaveMess } from './crowd-repository';
 import { GEOFENCE_BACKGROUND_TASK } from './background-geofence-task';
@@ -25,6 +27,28 @@ let backgroundStatus = 'inactive'; // 'active' | 'inactive' | 'denied' | 'unsupp
 let errorMessage = null;
 let locationWatcher = null;
 const listeners = new Set();
+let cloudSyncAttempted = false;
+
+const COORDS_FILE = `${FileSystem.documentDirectory}annpurna_mess_coords.json`;
+
+async function loadLocalMessCoords() {
+  try {
+    const raw = await FileSystem.readAsStringAsync(COORDS_FILE);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.latitude && parsed?.longitude) {
+        return parsed;
+      }
+    }
+  } catch {}
+  return null;
+}
+
+async function saveLocalMessCoords(coords) {
+  try {
+    await FileSystem.writeAsStringAsync(COORDS_FILE, JSON.stringify(coords));
+  } catch {}
+}
 
 /** Haversine formula to compute great-circle distance between two GPS points in meters */
 export function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
@@ -222,6 +246,15 @@ export async function startGeofencing() {
 
     errorMessage = null;
 
+    // Load persisted local coordinates first, then sync with cloud MongoDB
+    if (!cloudSyncAttempted) {
+      cloudSyncAttempted = true;
+      loadLocalMessCoords().then((local) => {
+        if (local) setMessCoordinates(local);
+        syncMessConfigFromCloud();
+      });
+    }
+
     // Get initial fix
     try {
       const initial = await Location.getCurrentPositionAsync({
@@ -293,7 +326,41 @@ export function setMessCoordinates(newCoords) {
   }
 }
 
-/** Set mess location to student's current location (instant inside-geofence for testing) */
+/** Fetches active mess location from backend cloud MongoDB and syncs it */
+export async function syncMessConfigFromCloud() {
+  try {
+    const config = await api.get('/presence/geofence-config');
+    if (config?.latitude && config?.longitude) {
+      setMessCoordinates({
+        latitude: config.latitude,
+        longitude: config.longitude,
+        radiusMeters: config.radiusMeters || 10,
+      });
+      await saveLocalMessCoords({
+        latitude: config.latitude,
+        longitude: config.longitude,
+        radiusMeters: config.radiusMeters || 10,
+      });
+    }
+  } catch {
+    // If offline, fallback to local cache
+    const local = await loadLocalMessCoords();
+    if (local) {
+      setMessCoordinates(local);
+    }
+  }
+}
+
+/** Called by Isha Singh / admin to set & persist mess location permanently for everyone */
+export async function publishMessCoordinatesToCloud(newCoords) {
+  setMessCoordinates(newCoords);
+  await saveLocalMessCoords(newCoords);
+
+  const res = await api.put('/presence/geofence-config', newCoords);
+  return res;
+}
+
+/** Set mess location to student's current location (instant inside-geofence & permanently saved in cloud) */
 export async function setMessToCurrentLocation() {
   if (!currentCoords) {
     try {
@@ -304,15 +371,17 @@ export async function setMessToCurrentLocation() {
     } catch (err) {
       errorMessage = 'Could not get current location: ' + err.message;
       emit();
-      return;
+      throw err;
     }
   }
 
   if (currentCoords) {
-    setMessCoordinates({
+    const newCoords = {
       latitude: currentCoords.latitude,
       longitude: currentCoords.longitude,
-    });
+      radiusMeters: messCoords.radiusMeters || 10,
+    };
+    return await publishMessCoordinatesToCloud(newCoords);
   }
 }
 

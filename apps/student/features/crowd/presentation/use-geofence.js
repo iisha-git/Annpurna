@@ -19,5 +19,7 @@ export function useGeofence() {
     stopBackgroundGeofencing: geofenceService.stopBackgroundGeofencing,
     setMessToCurrentLocation: geofenceService.setMessToCurrentLocation,
     setMessCoordinates: geofenceService.setMessCoordinates,
+    publishMessCoordinatesToCloud: geofenceService.publishMessCoordinatesToCloud,
+    syncMessConfigFromCloud: geofenceService.syncMessConfigFromCloud,
   };
 }

@@ -29,8 +29,8 @@ export default function IshaDeveloperCard({ student }) {
     try {
       await geofence.setMessToCurrentLocation();
       Alert.alert(
-        'Mess Calibrated',
-        `Mess center set to your current GPS: ${currentLat}, ${currentLon}`
+        '🌟 Saved to Cloud Database',
+        `Official Mess Hall location has been permanently set to your current GPS: ${currentLat}, ${currentLon}.\n\nAll students' apps will now use this exact location until you change it again!`
       );
     } catch (e) {
       Alert.alert('Calibration Error', e.message || 'Could not fetch current GPS fix');
@@ -39,17 +39,36 @@ export default function IshaDeveloperCard({ student }) {
     }
   };
 
-  const handleReset = () => {
-    geofence.setMessCoordinates({
-      latitude: DEFAULT_MESS_COORDINATES.latitude,
-      longitude: DEFAULT_MESS_COORDINATES.longitude,
-      radiusMeters: DEFAULT_MESS_COORDINATES.radiusMeters,
-    });
-    Alert.alert('Reset Complete', 'Mess coordinates restored to default configuration.');
+  const handleReset = async () => {
+    try {
+      await geofence.publishMessCoordinatesToCloud({
+        latitude: DEFAULT_MESS_COORDINATES.latitude,
+        longitude: DEFAULT_MESS_COORDINATES.longitude,
+        radiusMeters: DEFAULT_MESS_COORDINATES.radiusMeters,
+      });
+      Alert.alert(
+        'Reset Complete',
+        'Official mess coordinates restored to default configuration in cloud database.'
+      );
+    } catch (e) {
+      Alert.alert('Reset Error', e.message || 'Could not reset coordinates');
+    }
   };
 
-  const handleRadiusChange = (radius) => {
-    geofence.setMessCoordinates({ radiusMeters: radius });
+  const handleRadiusChange = async (radius) => {
+    try {
+      await geofence.publishMessCoordinatesToCloud({
+        latitude: geofence?.messCoords?.latitude ?? DEFAULT_MESS_COORDINATES.latitude,
+        longitude: geofence?.messCoords?.longitude ?? DEFAULT_MESS_COORDINATES.longitude,
+        radiusMeters: radius,
+      });
+      Alert.alert(
+        'Radius Saved',
+        `Mess geofence radius set to ${radius}m in cloud database for all students.`
+      );
+    } catch (e) {
+      geofence.setMessCoordinates({ radiusMeters: radius });
+    }
   };
 
   const handleTestNotification = async () => {
