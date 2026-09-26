@@ -19,18 +19,6 @@ export const MESS_GEOFENCE_ZONES = [
     longitude: 74.184705,
     radiusMeters: 10,
   },
-  {
-    identifier: 'annpurna_mess_zone_2',
-    latitude: 19.616510,
-    longitude: 74.184647,
-    radiusMeters: 10,
-  },
-  {
-    identifier: 'annpurna_mess_zone_3',
-    latitude: 19.616528,
-    longitude: 74.184694,
-    radiusMeters: 10,
-  },
 ];
 
 /**
