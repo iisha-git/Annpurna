@@ -15,4 +15,6 @@ export const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID || '';
 export const WHATSAPP_TEMPLATE_NAME = process.env.WHATSAPP_TEMPLATE_NAME || '';
 export const WHATSAPP_COUNTRY_CODE = process.env.WHATSAPP_COUNTRY_CODE || '91';
 // Link to the student app build, embedded as an invite template parameter.
-export const APP_DOWNLOAD_URL = process.env.APP_DOWNLOAD_URL || '';
+export const APP_DOWNLOAD_URL =
+  process.env.APP_DOWNLOAD_URL ||
+  'https://drive.google.com/file/d/1GsMAddZYPIQgeUq4NQPUJBuM8JfFqeNh/view?usp=sharing';

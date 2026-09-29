@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api';
 import { DAYS } from './menuData';
 import { Avatar, FoodLoader, Icon } from './ui';
+import { openWhatsAppInvite } from './lib/whatsappInvite';
 
 /**
  * ROSTER + LEAVES — owner pastes the mess office list, students claim their
@@ -295,16 +296,17 @@ export default function LeavesEditor() {
     }
   }
 
-  /* ── SMS invite ─────────────────────────────────────────────────────── */
+  /* ── WhatsApp invite ─────────────────────────────────────────────────── */
 
-  const [invites, setInvites] = useState({}); // messNumber → 'sending' | 'sent'
+  const [invites, setInvites] = useState({}); // messNumber → 'sent'
 
-  async function inviteStudent(s) {
-    setInvites((p) => ({ ...p, [s.id]: 'sending' }));
+  function inviteStudent(s) {
     try {
-      await api.post(`/students/${encodeURIComponent(s.id)}/invite`);
+      openWhatsAppInvite(s);
       setInvites((p) => ({ ...p, [s.id]: 'sent' }));
       setError('');
+      setStatus(`Opening WhatsApp invitation for ${s.name}…`);
+      api.post(`/students/${encodeURIComponent(s.id)}/invite`).catch(() => {});
       setTimeout(() => {
         setInvites((p) => {
           const next = { ...p };
@@ -313,11 +315,6 @@ export default function LeavesEditor() {
         });
       }, 6000);
     } catch (err) {
-      setInvites((p) => {
-        const next = { ...p };
-        delete next[s.id];
-        return next;
-      });
       setStatus('');
       setError(`Invite failed: ${err.message}`);
     }
@@ -706,16 +703,15 @@ export default function LeavesEditor() {
                           {s.claimed ? (
                             <span className="badge good">Linked</span>
                           ) : invites[s.id] === 'sent' ? (
-                            <span className="badge good">SMS sent</span>
+                            <span className="badge good">Invite sent</span>
                           ) : (
                             <button
-                              className={`btn invite-btn${invites[s.id] === 'sending' ? ' disabled' : ''}`}
-                              disabled={invites[s.id] === 'sending'}
+                              className="btn invite-btn"
                               onClick={(e) => { e.stopPropagation(); inviteStudent(s); }}
-                              title="SMS this student the app download + login steps"
+                              title="Send student the app download link on WhatsApp"
                             >
-                              <Icon name="sms" size={13} />
-                              {invites[s.id] === 'sending' ? 'Sending…' : 'Invite to app'}
+                              <Icon name="send" size={13} />
+                              Invite
                             </button>
                           )}
                           {confirming ? (

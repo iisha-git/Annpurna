@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { requireAuth, requireOwner } from '../middleware/auth.js';
 import { Leave } from '../models/Leave.js';
 import { Student } from '../models/Student.js';
-import { WHATSAPP_TEMPLATE_NAME } from '../config.js';
+import { APP_DOWNLOAD_URL, WHATSAPP_TEMPLATE_NAME } from '../config.js';
 import { sendWhatsApp } from '../lib/whatsapp.js';
 
 const router = Router();
@@ -208,7 +208,12 @@ router.post('/:messNumber/invite', requireOwner, async (req, res, next) => {
 
     const result = await sendWhatsApp(digits, { name: student.name, messNumber: student._id });
     if (!result.ok) {
-      return res.status(503).json({ error: result.message, code: result.code });
+      return res.json({
+        sent: false,
+        manual: true,
+        message: result.message,
+        downloadUrl: APP_DOWNLOAD_URL,
+      });
     }
 
     res.json({ sent: true, to: result.to, messageId: result.messageId, template: WHATSAPP_TEMPLATE_NAME });

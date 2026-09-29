@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { api } from '../api';
 import { Avatar, Icon } from '../ui';
+import { openWhatsAppInvite } from '../lib/whatsappInvite';
 
 const FILTERS = [
   ['all', 'All Students'],
@@ -149,10 +150,11 @@ export default function StudentDetails() {
   }
 
   // Invite student via WhatsApp
-  async function sendInvite(student) {
+  function sendInvite(student) {
     try {
-      await api.post(`/students/${encodeURIComponent(student.messNumber)}/invite`);
-      setToast(`WhatsApp invitation sent to ${student.name}`);
+      openWhatsAppInvite(student);
+      setToast(`Opening WhatsApp invitation for ${student.name}…`);
+      api.post(`/students/${encodeURIComponent(student.messNumber)}/invite`).catch(() => {});
     } catch (err) {
       setError(err.message);
     }
