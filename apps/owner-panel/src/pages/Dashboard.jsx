@@ -23,6 +23,16 @@ const REVIEWS = [
   { name: 'Kabir S.', initials: 'KS', stars: 4, text: 'Overall good, but breakfast could have more variety.', time: 'Yesterday' },
 ];
 
+/** Amber rule + label that separates the dashboard into readable movements. */
+function SectionHead({ label }) {
+  return (
+    <div className="sec-head">
+      <span>{label}</span>
+      <i className="sec-rule" />
+    </div>
+  );
+}
+
 export default function Dashboard({ onNavigate }) {
   const [crowdLevel, setCrowdLevel] = useState('MODERATE');
   const [headcount, setHeadcount] = useState(0);
@@ -110,6 +120,8 @@ export default function Dashboard({ onNavigate }) {
         </div>
       </div>
 
+      <SectionHead label="Right now" />
+
       {/* ── Live hero: crowd + attendance ── */}
       <section className="card card-dark hero-dash">
         <div className="hero-zone crowd-zone">
@@ -182,6 +194,8 @@ export default function Dashboard({ onNavigate }) {
           </p>
         </div>
       </section>
+
+      <SectionHead label="Today" />
 
       {/* ── Action band: urgent alerts (wide) + low stock (narrow) ── */}
       <div className="band">
@@ -304,6 +318,8 @@ export default function Dashboard({ onNavigate }) {
           </div>
         </section>
       </div>
+
+      <SectionHead label="Money & feedback" />
 
       {/* ── Money & feedback band: fees (narrow) + reviews (wide) ── */}
       <div className="band flip">

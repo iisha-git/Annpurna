@@ -39,9 +39,11 @@
   --violet-soft: #ebe5f8;
   --warn: #d17e00;
 
-  /* Elevation */
+  /* Elevation — a real scale so depth reads consistently across the panel */
   --shadow-card: 0 1px 2px rgba(14, 11, 19, 0.04), 0 10px 28px -14px rgba(14, 11, 19, 0.14);
+  --shadow-raised: 0 2px 4px rgba(14, 11, 19, 0.05), 0 18px 40px -18px rgba(14, 11, 19, 0.22);
   --shadow-pop: 0 18px 44px -18px rgba(14, 11, 19, 0.28);
+  --shadow-brand: 0 14px 30px -14px rgba(255, 157, 0, 0.55);
 
   /* Type */
   --font-body: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -50,20 +52,51 @@
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 18px;
+  --r-xl: 24px;
+
+  /* Layout rhythm — every breakpoint steps these, nothing hardcodes 36px */
+  --gutter: 36px;
+  --gap: 20px;
+  --pad-card: 22px;
+
+  /* Device safe areas — notch / home-indicator aware, 0 on desktop */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+}
+
+/* Fluid display sizes — the two places that used to burst at 375px.
+   clamp() lets the big numbers shrink on a phone instead of overflowing. */
+:root {
+  --fs-crowd: clamp(30px, 8.4vw, 58px);
+  --fs-h1: clamp(20px, 4.4vw, 24px);
+  --fs-h2: clamp(17px, 3.6vw, 26px);
+  --fs-hero-h1: clamp(30px, 7vw, 42px);
 }
 
 * { box-sizing: border-box; }
 
 html, body, #root { height: 100%; }
 
+html { -webkit-text-size-adjust: 100%; }
+
 body {
   margin: 0;
+  /* Guards against any child accidentally forcing a sideways scroll on a phone */
+  overflow-x: hidden;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
+  /* Respect the iOS home indicator / Android gesture bar */
+  padding-left: var(--safe-l);
+  padding-right: var(--safe-r);
 }
+
+/* Kill the blue tap flash on mobile without killing :focus-visible */
+button, a, input, select, textarea, summary { -webkit-tap-highlight-color: transparent; }
 
 button { font: inherit; cursor: pointer; }
 input, select, textarea { font: inherit; }
@@ -159,6 +192,14 @@ h1, h2, h3, h4 { margin: 0; }
 
 textarea.field { resize: vertical; line-height: 1.6; }
 
+/* iOS Safari zooms the whole page when a focused input computes under
+   16px. Below 860px every control is forced to 16px to prevent that. */
+@media (max-width: 860px) {
+  .field, .meal textarea, .range-field input, select.field { font-size: 16px; }
+  .range-field input { height: 40px; }
+  .meal textarea { padding: 12px; }
+}
+
 select.field {
   appearance: none;
   cursor: pointer;
@@ -176,23 +217,45 @@ select.field {
 .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #a79eaa; pointer-events: none; }
 .search-wrap .field { padding-left: 36px; width: 240px; }
 
-.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-group { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .field-group > span { font-size: 12.5px; font-weight: 800; color: var(--body); }
+
+/* Form grids — were inline gridTemplateColumns, which media queries can't
+   reach. They collapse to one column on a phone so fields never shrink
+   below a usable width. */
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.form-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.form-grid--wide-first { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+@media (max-width: 640px) {
+  .form-grid, .form-grid--3, .form-grid--wide-first { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* ── Cards ───────────────────────────────────────────────────── */
 
 .card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
+  /* Two-part shadow: a tight contact shadow plus a wide soft cast.
+     That pairing is what makes a flat rectangle read as a raised surface. */
   box-shadow: var(--shadow-card);
 }
-.card-pad { padding: 22px; }
+/* 1px inner highlight along the top edge — the "lit from above" cue that
+   separates this from a plain border. */
+.card::before {
+  content: ''; position: absolute; inset: 0 0 auto; height: 1px;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+  pointer-events: none;
+}
+.card-pad { padding: var(--pad-card); }
 .card-dark {
   background: linear-gradient(155deg, var(--dark-2) 0%, var(--dark) 70%);
   border-color: #26202f;
   color: #fff;
 }
+.card-dark::before { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent); }
 .card-head {
   display: flex; align-items: center; justify-content: space-between;
   gap: 14px; flex-wrap: wrap;
@@ -217,6 +280,7 @@ select.field {
 .stats.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .stat { display: flex; align-items: center; gap: 15px; }
+.stat > div { min-width: 0; }
 .stat-ico {
   width: 46px; height: 46px; flex: 0 0 auto;
   display: grid; place-items: center;
@@ -229,8 +293,8 @@ select.field {
 .tone-violet{ background: var(--violet-soft); color: var(--violet); }
 .tone-blue  { background: var(--info-soft); color: var(--info); }
 
-.stat-label { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.stat-value { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; line-height: 1.15; display: flex; align-items: baseline; gap: 6px; }
+.stat-label { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; overflow-wrap: anywhere; }
+.stat-value { font-size: clamp(19px, 5vw, 22px); font-weight: 800; letter-spacing: -0.3px; line-height: 1.15; display: flex; align-items: baseline; gap: 6px; }
 .stat-value small { font-size: 12px; font-weight: 700; color: var(--muted); }
 .stat-delta {
   display: inline-flex; align-items: center; gap: 4px;
@@ -335,7 +399,10 @@ select.field {
 
 /* ── Skip the sidebar; used on shell ─────────────────────────── */
 
-.app { display: flex; height: 100vh; width: 100vw; overflow: hidden; background: var(--bg); }
+/* dvh (not vh) so iOS/Android browser chrome collapsing never clips the
+   bottom of the panel. width:100% not 100vw — 100vw includes the desktop
+   scrollbar and was the source of a stray horizontal scrollbar. */
+.app { display: flex; height: 100vh; height: 100dvh; width: 100%; overflow: hidden; background: var(--bg); }
 
 /* ── Sidebar ─────────────────────────────────────────────────── */
 
@@ -384,8 +451,9 @@ select.field {
   border-top: 1px solid #261f30;
 }
 .user-tile { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.user-name { font-size: 12px; font-weight: 800; color: #cfc8d8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.crown { font-size: 10px; color: #ff9d00; font-weight: 800; letter-spacing: 0.4px; }
+.user-tile-text { display: flex; flex-direction: column; min-width: 0; }
+.user-name { display: block; font-size: 12px; font-weight: 800; color: #cfc8d8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crown { display: block; margin-top: 1px; font-size: 10px; color: #ff9d00; font-weight: 800; letter-spacing: 0.4px; }
 .signout {
   width: 36px; height: 36px; flex: 0 0 auto;
   display: grid; place-items: center;
@@ -395,14 +463,66 @@ select.field {
 }
 .signout:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
 
+/* ── Mobile nav: hamburger + scrim ───────────────────────────── */
+/* Hidden on desktop; becomes the only way into the nav below 1024px. */
+
+.nav-toggle {
+  display: none;
+  width: 40px; height: 40px; flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--border); border-radius: 11px;
+  background: var(--surface); color: var(--ink);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.nav-toggle:hover { background: var(--surface-soft); border-color: var(--border-hi); }
+
+.scrim {
+  display: none;
+  position: fixed; inset: 0; z-index: 45;
+  background: rgba(12, 9, 18, 0.5);
+  backdrop-filter: blur(2px);
+  animation: fade-in 0.18s ease;
+}
+
+@media (max-width: 1023px) {
+  /* Off-canvas drawer. Slides in from the left, sits above content,
+     and never steals permanent width from a phone screen. */
+  .sidebar {
+    position: fixed; z-index: 50;
+    top: 0; bottom: 0; left: 0;
+    width: min(288px, 84vw);
+    padding-top: var(--safe-t);
+    padding-bottom: var(--safe-b);
+    transform: translateX(-102%);
+    transition: transform 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+    will-change: transform;
+  }
+  .app.nav-open .sidebar { transform: none; }
+  .app.nav-open .scrim { display: block; }
+
+  .nav-toggle { display: grid; }
+  /* Labels stay visible inside the drawer — an icon-only rail on a
+     375px screen wastes 20% of the width and hides every label. */
+  .brand { padding: 18px 18px 14px; }
+  .nav { padding: 8px 14px 14px; }
+  .sidebar-foot { padding: 12px 16px calc(12px + var(--safe-b)); }
+}
+
 /* ── Main area: topbar + scroll ──────────────────────────────── */
 
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 36px 18px; flex-wrap: wrap; }
-.page-title h1 { font-family: var(--font-display); font-size: 24px; font-weight: 600; letter-spacing: 0.1px; color: var(--ink); }
+.topbar {
+  display: flex; align-items: center; gap: 14px;
+  padding: calc(20px + var(--safe-t)) var(--gutter) 18px;
+  flex-wrap: wrap;
+}
+.topbar-l { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+.page-title { min-width: 0; }
+.page-title h1 { font-family: var(--font-display); font-size: var(--fs-h1); font-weight: 600; letter-spacing: 0.1px; color: var(--ink); line-height: 1.2; }
 .page-title p { margin: 3px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); }
-.topbar-r { display: flex; align-items: center; gap: 10px; }
+.topbar-r { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 
 .date-chip {
   display: inline-flex; align-items: center; gap: 8px;
@@ -416,14 +536,14 @@ select.field {
 .bell:hover { color: var(--ink); background: var(--surface-soft); }
 .bell .dot { position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); border: 2px solid var(--surface); }
 
-.content-scroll { flex: 1; overflow-y: auto; padding: 0 36px 48px; }
+.content-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 0 var(--gutter) calc(48px + var(--safe-b)); }
 
 .page { max-width: 1320px; margin: 0 auto; }
-.stack { display: flex; flex-direction: column; gap: 20px; }
+.stack { display: flex; flex-direction: column; gap: var(--gap); }
 
 /* Grids */
-.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
 
 /* ── Dashboard specific ──────────────────────────────────────── */
 
@@ -451,17 +571,6 @@ select.field {
   100% { box-shadow: 0 0 0 0 rgba(81, 207, 102, 0); }
 }
 
-.crowd-inner { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 26px 22px 22px; }
-.crowd-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; letter-spacing: 1.8px; text-transform: uppercase; color: #b9b1c4; }
-.crowd-eyebrow .live-dot { background: #51cf66; }
-.crowd-status { font-family: var(--font-display); font-weight: 600; font-size: 44px; letter-spacing: 3px; line-height: 1; margin: 14px 0 6px; text-transform: uppercase; }
-.crowd-meta { font-size: 13px; font-weight: 700; color: #b9b1c4; }
-.crowd-updated { font-size: 11.5px; font-weight: 700; color: #706680; margin-top: 3px; }
-
-.crowd-meter { width: 100%; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; margin: 20px 0 18px; }
-.crowd-meter i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #4caf50, #f59e0b, #e0472e); transition: width 0.4s ease; }
-
-.crowd-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 360px; }
 .crowd-opt {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.05);
@@ -479,11 +588,10 @@ select.field {
 .donut-center b { font-size: 24px; letter-spacing: -0.5px; }
 .donut-center span { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
 
-.legend { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 0; }
-.legend-row { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: var(--body); }
-.legend-row i { width: 10px; height: 10px; border-radius: 3.5px; }
-.legend-row b { color: var(--ink); font-weight: 800; }
-.legend-row small { color: var(--muted); font-weight: 700; }
+/* NOTE: the old `.legend` / `.legend-row` donut-legend rules lived here and
+   were dead code — no JSX used them — but `.legend { flex-direction: column }`
+   still leaked into the Leave page legend further down this file, which
+   stacked its chips vertically instead of inline. Only one `.legend` now. */
 
 .bar-row { display: grid; grid-template-columns: 8px 1fr 44px; align-items: center; gap: 12px; margin-bottom: 14px; }
 .bar-row:last-child { margin-bottom: 0; }
@@ -508,10 +616,32 @@ select.field {
 
 /* Slim KPI strip — secondary quick-scan band, deliberately lighter than the cards below */
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-.kpi { display: flex; align-items: center; gap: 13px; padding: 15px 18px; }
-.kpi-ico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; }
-.kpi-num { font-size: 21px; font-weight: 800; letter-spacing: -0.3px; line-height: 1; color: var(--ink); }
-.kpi-label { margin-top: 5px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
+.kpi {
+  position: relative;
+  display: flex; align-items: center; gap: 13px;
+  padding: 16px 18px;
+  overflow: hidden;
+  transition: transform 0.16s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+/* Hairline of the tile's own tone along the top edge — reads as a lit
+   surface rather than another flat white rectangle. */
+.kpi::before {
+  content: ''; position: absolute; inset: 0 0 auto; height: 3px;
+  background: linear-gradient(90deg, var(--brand), rgba(255, 157, 0, 0));
+  opacity: 0.85;
+}
+.kpi::after {
+  content: ''; position: absolute; right: -30px; top: -34px;
+  width: 116px; height: 116px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 157, 0, 0.14), transparent 68%);
+  pointer-events: none;
+}
+/* min-width:0 is the load-bearing bit — without it the uppercase label sets
+   a min-content width and bursts the tile on a 2-up phone grid. */
+.kpi > div { min-width: 0; }
+.kpi-ico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; flex: 0 0 auto; }
+.kpi-num { font-size: clamp(18px, 4.6vw, 21px); font-weight: 800; letter-spacing: -0.3px; line-height: 1; color: var(--ink); }
+.kpi-label { margin-top: 5px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); overflow-wrap: anywhere; }
 .kpi-note { margin-top: 3px; font-size: 11.5px; font-weight: 700; color: var(--muted); }
 
 /* Dark hero — the single "live now" panel, split into two zones by a hairline */
@@ -520,6 +650,8 @@ select.field {
   grid-template-columns: minmax(0, 1.15fr) 1px minmax(0, 1fr);
   position: relative;
   overflow: hidden;
+  border-color: #2c2536;
+  box-shadow: var(--shadow-pop);
 }
 .hero-dash::before, .hero-dash::after { content: ''; position: absolute; border-radius: 50%; pointer-events: none; }
 .hero-dash::before {
@@ -532,7 +664,24 @@ select.field {
   background: radial-gradient(circle, rgba(108, 92, 231, 0.15), transparent 65%);
   bottom: -180px; right: -140px;
 }
-.hero-zone { position: relative; padding: 28px 36px; display: flex; flex-direction: column; justify-content: center; }
+
+/* Editorial section marker — a small amber rule + label that gives the
+   page a printed-magazine rhythm instead of a stack of loose boxes. */
+.sec-head {
+  display: flex; align-items: center; gap: 12px;
+  margin: 6px 2px -4px;
+}
+.sec-head::before {
+  content: ''; width: 22px; height: 3px; flex: 0 0 auto;
+  border-radius: 999px; background: linear-gradient(90deg, var(--brand), var(--brand-hi));
+}
+.sec-head span {
+  font-size: 11px; font-weight: 800; letter-spacing: 1.6px;
+  text-transform: uppercase; color: var(--muted);
+}
+.sec-head .sec-rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+@media (max-width: 640px) { .sec-head .sec-rule { display: none; } }
+.hero-zone { position: relative; padding: 28px var(--gutter); display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .hero-divider { background: rgba(255, 255, 255, 0.1); }
 .hero-eyebrow {
   display: inline-flex; align-items: center; gap: 9px;
@@ -540,16 +689,23 @@ select.field {
 }
 .hero-eyebrow .live-dot { background: #51cf66; }
 
+/* Was a fixed 58px — "MODERATE" at that size is ~330px wide and burst out
+   of a 375px phone. clamp() shrinks it with the viewport instead. */
 .crowd-status-lg {
   font-family: var(--font-display); font-weight: 600;
-  font-size: 58px; letter-spacing: 4px; line-height: 1;
-  text-transform: uppercase; margin: 13px 0 6px;
+  font-size: var(--fs-crowd);
+  letter-spacing: clamp(1px, 1vw, 4px);
+  line-height: 1.05;
+  text-transform: uppercase;
+  margin: 13px 0 6px;
+  /* Longest word must never widen the grid track */
+  overflow-wrap: anywhere;
 }
 .crowd-meta { font-size: 12.5px; font-weight: 700; color: #c3bccb; }
 .crowd-updated { font-size: 11px; font-weight: 700; color: #706680; margin-top: 3px; }
 .crowd-meter { width: 100%; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; margin: 20px 0 16px; }
 .crowd-meter i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #4caf50, #f59e0b, #e0472e); transition: width 0.4s ease; }
-.crowd-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 430px; width: 100%; }
+.crowd-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-width: 430px; width: 100%; }
 
 .att-layout { display: flex; align-items: center; gap: 26px; margin-top: 10px; }
 .att-layout .donut { width: 134px; height: 134px; }
@@ -957,7 +1113,9 @@ select.field {
 }
 .modal {
   width: min(540px, 100%);
-  max-height: 86vh; overflow-y: auto;
+  max-height: 86vh; max-height: 86dvh; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   background: #fff;
   border-radius: 20px;
   box-shadow: var(--shadow-pop);
@@ -1132,8 +1290,19 @@ select.field {
 .content-scroll::-webkit-scrollbar-thumb, .roster-list::-webkit-scrollbar-thumb { background: #ddd2c3; border-radius: 999px; border: 3px solid var(--bg); }
 .roster-list::-webkit-scrollbar-thumb { border-color: var(--surface); }
 
-/* ── Responsive ──────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════
+   Responsive
+   Ladder: 1280 · 1120 · 1024 · 860 · 640 · 460
+   Everything below is min-width:0-safe; no fixed px survives a 360px phone.
+   ════════════════════════════════════════════════════════════════ */
 
+/* ── ≤1280px · tighten the gutters before anything reflows ─────── */
+@media (max-width: 1280px) {
+  :root { --gutter: 28px; --gap: 18px; --pad-card: 20px; }
+  .content-scroll { padding-bottom: calc(44px + var(--safe-b)); }
+}
+
+/* ── ≤1120px · three-up and asymmetric bands collapse ─────────── */
 @media (max-width: 1120px) {
   .grid-3 { grid-template-columns: 1fr; }
   .stats, .stats.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1144,28 +1313,184 @@ select.field {
   .hero-dash { grid-template-columns: 1fr; }
   .hero-divider { height: 1px; width: auto; }
   .crowd-zone { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+  /* The roster was a fixed-height nested scroller — a second scroll axis
+     inside the page scroll is unusable on touch. Let it grow instead. */
+  .roster-card { contain: none; }
+  .roster-list { min-height: 0; max-height: 460px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .history-list { max-height: none; }
 }
-@media (max-width: 980px) {
+
+/* ── ≤1024px · sidebar becomes an off-canvas drawer (see above) ── */
+@media (max-width: 1023px) {
+  :root { --gutter: 22px; }
+  .leave-week { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .grid-2 { grid-template-columns: 1fr; }
-  .leave-week { grid-template-columns: repeat(4, 1fr); }
   .login-wrap { grid-template-columns: 1fr; }
-  .login-hero { display: none; }
+  /* Keep the brand story on tablet, just stack it above the form */
+  .login-hero { padding: 34px 32px; gap: 22px; }
+  .login-hero-copy h1 { font-size: clamp(28px, 6vw, 38px); }
+  .login-hero-copy { margin: 0; }
+  .login-points { display: none; }
+  .hero-foot { display: none; }
 }
+
+/* ── ≤860px · single-column everything, drawer nav live ───────── */
 @media (max-width: 860px) {
-  .sidebar { width: 74px; }
-  .brand { justify-content: center; padding: 22px 10px 16px; }
-  .brand-text, .nav-label, .nav-item span, .brand-sub { display: none; }
-  .nav-item { justify-content: center; }
-  .nav { padding: 8px 12px; }
-  .user-name, .crown { display: none; }
-  .sidebar-foot { justify-content: space-between; gap: 2px; }
-  .topbar, .content-scroll { padding-left: 20px; padding-right: 20px; }
-}
-@media (max-width: 620px) {
+  :root { --gutter: 18px; --gap: 16px; --pad-card: 18px; }
+
+  .topbar { padding-top: calc(14px + var(--safe-t)); padding-bottom: 14px; }
+  .page-title p { display: none; }          /* subtitle is noise on a phone */
+
   .stats, .stats.cols-3 { grid-template-columns: 1fr; }
-  .search-wrap .field { width: 100%; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .kpi { padding: 14px 13px; gap: 10px; }
+  .kpi-ico { width: 36px; height: 36px; border-radius: 10px; }
+  .kpi-note { display: none; }             /* third line is the first to go */
+
+  /* Donut + numbers side by side needs ~330px; stack below that */
+  .att-layout { flex-direction: column; align-items: stretch; gap: 18px; }
+  .att-layout .donut { align-self: center; }
+  .att-num { padding: 9px 0; }
+
   .toolbar { flex-direction: column; align-items: stretch; }
   .toolbar-r { justify-content: flex-end; }
+  .search-wrap .field { width: 100%; }
   .quick-grid { grid-template-columns: 1fr 1fr; }
-  .daytabs { grid-template-columns: repeat(4, 1fr); }
+  .daytabs { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 16px var(--pad-card); gap: 7px; }
+
+  .card-head { padding: 16px var(--pad-card); }
+  .card-body { padding: 16px var(--pad-card); }
+  .card > .table-wrap { padding: 4px var(--pad-card) var(--pad-card); }
+  .compact-list { padding: 0 var(--pad-card) 10px; }
+  .meals { padding: 0 var(--pad-card) var(--pad-card); }
+  .accordion, .roster-tabs, .roster-filter-note { margin-left: var(--pad-card); margin-right: var(--pad-card); }
+  .planner-foot, .card-foot { padding-left: var(--pad-card); padding-right: var(--pad-card); }
+
+  /* Inline action buttons (Restock / Remind / Read) drop under the text
+     instead of squeezing it into an unreadable 3-word column. The text
+     column carries an inline `flex: 1`, so the wrap has to come from
+     giving the button a full-width basis — not from the middle div. */
+  .alert { flex-wrap: wrap; }
+  .alert .btn { margin-left: 48px; }
+
+  /* Dense controls become horizontally scrollable rather than clipped */
+  .seg, .week-nav, .head-actions { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .seg::-webkit-scrollbar, .week-nav::-webkit-scrollbar { display: none; }
+
+  .modal-backdrop { padding: 16px; align-items: flex-end; }
+  .modal { max-height: 88dvh; }
+  .modal-foot { flex-wrap: wrap; }
+  .modal-foot .btn { flex: 1 1 auto; }
+
+  .login-card { padding: 30px 24px; }
+  .preboot-card { padding: 36px 28px; }
+  .preboot-hint { max-width: none; }
+  .page-load { padding: 44px 16px; }
+  .food-loader { transform: scale(0.85); }
+
+  .range-field input { width: 100%; min-width: 118px; flex: 1 1 118px; }
+  .range-sep { display: none; }
+}
+
+/* ── ≤640px · phones ─────────────────────────────────────────── */
+@media (max-width: 640px) {
+  :root { --gutter: 14px; --gap: 14px; --pad-card: 16px; }
+
+  .kpis { grid-template-columns: 1fr; }
+  .kpi { padding: 15px 16px; }
+  .kpi-note { display: block; }
+  .kpi-ico { width: 40px; height: 40px; }
+
+  .leave-week { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .leave-day { padding: 10px 3px 8px; }
+  .leave-day .dd { font-size: 19px; }
+
+  .daytabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  /* Full-bleed bottom sheet — thumb-reachable on a phone */
+  .modal-backdrop { padding: 0; align-items: flex-end; }
+  .modal {
+    width: 100%; max-width: none;
+    max-height: 92dvh;
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
+    padding-bottom: var(--safe-b);
+    animation: sheet-in 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  @keyframes sheet-in { from { transform: translateY(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal-head { padding: 18px 18px 0; }
+  .modal-body { padding: 16px 18px 18px; }
+  .modal-foot { padding: 0 18px 18px; }
+
+  .login-form { padding: 28px 16px; }
+  .login-card { padding: 26px 20px; border-radius: var(--r-lg); }
+
+  .alert .btn { margin-left: 0; width: 100%; }
+
+  .compact-row { gap: 10px; }
+  .compact-row .stock-bar { width: 44px; }
+
+  /* Tables scroll sideways — fade the right edge so it's obviously scrollable */
+  .table-wrap {
+    -webkit-overflow-scrolling: touch;
+    background:
+      linear-gradient(to left, rgba(14, 11, 19, 0.07), transparent 28px) right / 26px 100% no-repeat local,
+      linear-gradient(to right, rgba(14, 11, 19, 0.07), transparent 28px) left / 26px 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, rgba(14, 11, 19, 0.12), transparent) left / 12px 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, rgba(14, 11, 19, 0.12), transparent) right / 12px 100% no-repeat scroll;
+  }
+  .data-table th, .data-table td { padding-left: 12px; padding-right: 12px; }
+  .data-table th:first-child, .data-table td:first-child { padding-left: 14px; }
+  .data-table th:last-child, .data-table td:last-child { padding-right: 14px; }
+}
+
+/* ── ≤460px · small phones (iPhone SE and older) ──────────────── */
+@media (max-width: 460px) {
+  :root { --gutter: 12px; --pad-card: 14px; }
+
+  .crowd-opts { gap: 6px; }
+  .crowd-opt { padding: 9px 4px; font-size: 11.5px; }
+  .quick-grid { grid-template-columns: 1fr; }
+  .leave-week { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .daytabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .btn-block, .btn { font-size: 13.5px; }
+  .planner-summary { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .sum-live { margin-left: 0; }
+}
+
+/* ── Touch devices · no hover lift, bigger hit targets ────────── */
+@media (hover: none) {
+  .kpi-btn:hover, .kpi:hover { transform: none; }
+  .btn:hover:not(:disabled) { background: var(--surface); color: var(--body); border-color: var(--border); }
+  .btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, var(--brand-hi), var(--brand)); }
+  .nav-item:hover { background: transparent; color: #b9b1c4; }
+  .nav-item.active:hover { background: linear-gradient(90deg, rgba(255, 157, 0, 0.2), rgba(255, 157, 0, 0.06)); color: #ffb64d; }
+  .icon-btn:hover, .bell:hover, .signout:hover { background: var(--surface); }
+  .nav-item, .btn { min-height: 44px; }
+  .row-x, .icon-btn { min-width: 40px; min-height: 40px; }
+}
+
+/* ── Landscape phones ────────────────────────────────────────── */
+@media (max-height: 520px) and (orientation: landscape) {
+  .login-hero { display: none; }
+  .login-wrap { grid-template-columns: 1fr; }
+  .modal { max-height: 92dvh; }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .sidebar { transition: none; }
+}
+
+/* ── Print ───────────────────────────────────────────────────── */
+@media print {
+  .sidebar, .topbar-r, .nav-toggle, .scrim, .btn, .link-btn { display: none !important; }
+  .app { height: auto; overflow: visible; }
+  .content-scroll { overflow: visible; padding: 0; }
+  .card { box-shadow: none; break-inside: avoid; }
 }

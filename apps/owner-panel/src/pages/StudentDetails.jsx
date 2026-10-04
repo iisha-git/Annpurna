@@ -451,7 +451,7 @@ export default function StudentDetails() {
               </button>
             </div>
             <form onSubmit={handleAddStudent} style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+              <div className="form-grid form-grid--wide-first">
                 <label className="field-group">
                   <span>Mess Number *</span>
                   <input
@@ -474,7 +474,7 @@ export default function StudentDetails() {
                 </label>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              <div className="form-grid form-grid--3">
                 <label className="field-group">
                   <span>Room</span>
                   <input

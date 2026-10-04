@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { api, getToken, setToken } from './api';
 import { Avatar, FoodLoader, Icon } from './ui';
@@ -172,13 +172,36 @@ function Shell({ user, booting = false, onSignOut }) {
   };
 
   const [tab, setTabState] = useState(tabFromLocation);
+  const [navOpen, setNavOpen] = useState(false);
   const active = TABS.find((t) => t.key === tab);
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
 
-  const setTab = (next) => {
+  const setTab = useCallback((next) => {
     setTabState(next);
+    setNavOpen(false);
     if (window.location.pathname !== `/${next}`) window.history.replaceState(null, '', `/${next}`);
-  };
+  }, []);
+
+  /* Below 1024px the sidebar is an off-canvas drawer: close it on Escape,
+     on scrim tap, and whenever the viewport grows back to desktop width
+     (otherwise it stays stuck open and covers the content). */
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setNavOpen(false); };
+    const onResize = () => { if (window.innerWidth > 1023) setNavOpen(false); };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [navOpen]);
+
+  /* The URL can change the tab from outside React (deep link, back button).
+     Drop the drawer if that happens while it's open. */
+  useEffect(() => {
+    setNavOpen(false);
+  }, [tab]);
 
   /* Let the URL drive the tab, so /leaves (or #leaves) and back/forward work. */
   useEffect(() => {
@@ -219,8 +242,8 @@ function Shell({ user, booting = false, onSignOut }) {
   }
 
   return (
-    <div className="app">
-      <aside className="sidebar">
+    <div className={`app ${navOpen ? 'nav-open' : ''}`}>
+      <aside className="sidebar" id="app-sidebar">
         <div className="brand">
           <span className="brand-mark"><Icon name="wheat" size={20} /></span>
           <div className="brand-text">
@@ -235,6 +258,7 @@ function Shell({ user, booting = false, onSignOut }) {
             <button
               key={t.key}
               className={`nav-item ${tab === t.key ? 'active' : ''}`}
+              aria-current={tab === t.key ? 'page' : undefined}
               onClick={() => setTab(t.key)}
             >
               <Icon name={t.icon} size={18} />
@@ -246,27 +270,39 @@ function Shell({ user, booting = false, onSignOut }) {
         <div className="sidebar-foot">
           <span className="user-tile">
             <Avatar name={user?.email || 'O'} size={36} />
-            <span>
+            <span className="user-tile-text">
               <span className="user-name">{user?.email || (booting ? 'Loading…' : 'Owner')}</span>
-              <br />
               <span className="crown">Owner</span>
             </span>
           </span>
-          <button className="signout" title="Sign out" onClick={onSignOut}>
+          <button className="signout" title="Sign out" aria-label="Sign out" onClick={onSignOut}>
             <Icon name="logout" size={17} />
           </button>
         </div>
       </aside>
 
+      {/* Tap-anywhere-else to dismiss the mobile drawer */}
+      <div className="scrim" onClick={() => setNavOpen(false)} aria-hidden="true" />
+
       <main className="main">
         <header className="topbar">
-          <div className="page-title">
-            <h1>{active.title}</h1>
-            <p>{active.subtitle}</p>
+          <button
+            className="nav-toggle"
+            aria-label="Open navigation"
+            aria-expanded={navOpen}
+            aria-controls="app-sidebar"
+            onClick={() => setNavOpen((v) => !v)}>
+            <Icon name="menu" size={20} />
+          </button>
+          <div className="topbar-l">
+            <div className="page-title">
+              <h1>{active.title}</h1>
+              <p>{active.subtitle}</p>
+            </div>
           </div>
           <div className="topbar-r">
             <span className="date-chip"><Icon name="calendar" size={15} />{today}</span>
-            <button className="bell" title="Notifications"><Icon name="bell" size={17} /><i className="dot" /></button>
+            <button className="bell" title="Notifications" aria-label="Notifications"><Icon name="bell" size={17} /><i className="dot" /></button>
           </div>
         </header>
 

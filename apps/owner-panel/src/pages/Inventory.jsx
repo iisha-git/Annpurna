@@ -582,7 +582,7 @@ export default function Inventory() {
                 onChange={(e) => setForm((f) => ({ ...f, item: e.target.value }))}
               />
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="form-grid">
               <label className="field-group">
                 <span>Quantity</span>
                 <input
@@ -613,7 +613,7 @@ export default function Inventory() {
                 </select>
               </label>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="form-grid">
               <label className="field-group">
                 <span>Category</span>
                 <select
